@@ -1,22 +1,32 @@
 function [ handles ] = drawTuningPoints(currentFile, handles)
 %drawTuningPoints draws the tuning points to augment the tube's position
 
-origTubePoints = file.tubePoints;
+origTubePoints = currentFile.tubePoints;
+tubePoints = currentFile.getTubePoints(); %adjusted for ROI
+waypointPassbys = currentFile.getWaypointPassbys();
 
-tubePoints = currentFile.getTubePoints(); %auto adjusted for ROI on
+% constants
+spacing = Constants.TUNING_POINT_SPACING; %how often tuning points are placed
 
-waypointPassbys = checkForRoiOn(file.waypointPassbys, file.roiOn, file.roiCoords);
+startColour = Constants.TUNING_POINT_START_COLOUR;
+endColour = Constants.TUNING_POINT_END_COLOUR;
 
-spacing = 10; %how often tuning points are placed
+draggable = true;
+
+%plot the tuning points!
 
 spaceNumber = 2;
 
-tuningPoints = cell(0);
+
 tuningPointNum = 1;
 
 numTuningPoints = floor(length(tubePoints) / spacing);
-
-colorStep = 1/numTuningPoints; %color will change incrementally
+tuningPoints = cell(0);
+% calculate colour increments for gradient colour shift between
+% lines
+redShift = (endColour(1) - startColour(1))/numTuningPoints;
+greenShift = (endColour(2) - startColour(2))/numTuningPoints;
+blueShift = (endColour(3) - startColour(3))/numTuningPoints;
 
 for i=1:length(tubePoints)    
 
@@ -24,73 +34,17 @@ for i=1:length(tubePoints)
         spaceNumber = spaceNumber + 1;
     end
 
-    if mod(i, spacing) == 0
-        handle = impoint(imageDisplayHandle, tubePoints(i,:));
+    if mod(i, spacing) == 0        
+        r = startColour(1) + (i/spacing)*redShift;
+        g = startColour(2) + (i/spacing)*greenShift;
+        b = startColour(3) + (i/spacing)*blueShift;
         
-        setColor(handle, [0.5+tuningPointNum*(colorStep/2), tuningPointNum*(colorStep/2), 0]);            
+        colour = [r g b];
+                
+        handle = plotImpoint(tubePoints(i,:), colour, draggable, handles.imageAxes);           
 
         tuningPoints{tuningPointNum} = TuningPoint(handle, spaceNumber, origTubePoints(i,:)); %store original position with ROI coord shift
         tuningPointNum = tuningPointNum + 1;
-    end
-end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-waypointHandles = handles.waypointHandles;
-
-waypoints = currentFile.getWaypoints();
-numWaypoints = length(waypoints);
-
-if currentFile.waypointsOn
-    if isempty(waypointHandles) %create new
-        %constants
-        colour = Constants.WAYPOINT_COLOUR;
-        
-        %create waypoints
-        
-        waypointHandles = impoint.empty(numWaypoints, 0); %empty handle matrix
-        
-        for i=1:numWaypoints            
-            waypointHandles(i) = plotImpoint(waypoints(i,:), colour, draggable, handles.imageAxes);
-        end
-        
-        % push up update
-        handles.waypointHandles = waypointHandles;
-    else %handles not empty, the elements already exist, so just update
-        if toggled %just set visiblity
-            for i=1:numWaypoints
-                set(waypointHandles(i),'Visible','on');
-            end
-        end
-        
-        %update them
-        for i=1:numWaypoints
-            setPosition(waypointHandles(i), waypoints(i,:));
-        end
-    end
-else %turn it off
-    if ~isempty(waypointHandles) %if the objects exist, turn them off
-        for i=1:numWaypoints
-            set(waypointHandles(i),'Visible','off');
-        end
     end
 end
 

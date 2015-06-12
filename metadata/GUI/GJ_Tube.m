@@ -1238,13 +1238,19 @@ function patientSelector_Callback(hObject, eventdata, handles)
 
 handles.currentPatientNum = get(hObject,'Value');
 
-updatePatientSelector(handles);
-
 currentFile = getCurrentFile(handles);
 
-updateUndo = false;
+%update GUI
+updateImageInfo(currentFile, handles);
+updateToggleButtons(currentFile, handles);
+updatePatientSelector(handles);
+updateUnitPanel(handles, 'on', currentFile.displayUnits, currentFile.getRefPoints());
 
-updateDisplayAndHandles(currentFile, handles, hObject, updateUndo);
+%draw new image
+handles = drawAll(currentFile, handles, hObject);
+
+%push up changes
+guidata(hObject, handles);
 
 
 
@@ -1627,24 +1633,33 @@ switch func
     case 'Tube Tune'
         currentFile = getCurrentFile(handles);
         
-        currentFile.waypoints = updatePositionsOfWaypoints(currentFile);
-        
-        newWaypoints = getNewWaypoints(currentFile);
-        
-        currentFile.waypoints = newWaypoints;
+        currentFile = currentFile.setNewWaypoints(handles.tuningPoints, handles.waypointHandles);
+                
         currentFile.tubePoints = [];
         currentFile.metricPoints = [];
         currentFile.tubeOn = false;
         currentFile.metricsOn = false;
         currentFile.waypointsOn = true;
         
-        handles = pushUpChanges(handles, currentFile);
+        %save changes
+        updateUndo = true;
+        pendingChanges = true;
+        
+        handles = updateFile(currentFile, updateUndo, pendingChanges, handles);
         
         %turn-off accept/decline buttons
         set(handles.generalAccept, 'Visible', 'off', 'TooltipString', '', 'UserData', '');
         set(handles.generalDecline, 'Visible', 'off', 'TooltipString', '', 'UserData', '');
         
-        updateDisplayAndHandles( currentFile, handles, hObject);
+        %GUI updated
+        updateToggleButtons(getCurrentFile(handles), handles);
+        
+        %displayed imaged updated
+        handles = drawAll(currentFile, handles, hObject);
+        
+        %push up changes
+        guidata(hObject, handles);
+        
     otherwise
         warning('Invalid UserData setting for generalAccept');
 end

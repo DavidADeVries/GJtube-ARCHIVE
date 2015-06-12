@@ -1,7 +1,6 @@
 function [ handles ] = drawTuningPoints(currentFile, handles)
 %drawTuningPoints draws the tuning points to augment the tube's position
 
-origTubePoints = currentFile.tubePoints;
 tubePoints = currentFile.getTubePoints(); %adjusted for ROI
 waypointPassbys = currentFile.getWaypointPassbys();
 
@@ -17,10 +16,12 @@ draggable = true;
 
 spaceNumber = 2;
 
-tuningPoints = cell(0);
+
 tuningPointNum = 1;
 
 numTuningPoints = floor(length(tubePoints) / spacing);
+
+tuningPoints = TuningPoint.empty(numTuningPoints, 0);
 
 % calculate colour increments for gradient colour shift between
 % lines
@@ -35,18 +36,20 @@ for i=1:length(tubePoints)
     end
 
     if mod(i, spacing) == 0        
-        r = startColour(1) + (i/spacing)*redShift;
-        g = startColour(2) + (i/spacing)*greenShift;
-        b = startColour(3) + (i/spacing)*blueShift;
+        r = startColour(1) + tuningPointNum*redShift;
+        g = startColour(2) + tuningPointNum*greenShift;
+        b = startColour(3) + tuningPointNum*blueShift;
         
         colour = [r g b];
                 
         handle = plotImpoint(tubePoints(i,:), colour, draggable, handles.imageAxes);           
 
-        tuningPoints{tuningPointNum} = TuningPoint(handle, spaceNumber, origTubePoints(i,:)); %store original position with ROI coord shift
+        tuningPoints(tuningPointNum) = TuningPoint(handle, spaceNumber, tubePoints(i,:), currentFile); %store original position with ROI coord shift
         tuningPointNum = tuningPointNum + 1;
     end
 end
+
+handles.tuningPoints = tuningPoints;
 
 end
 
