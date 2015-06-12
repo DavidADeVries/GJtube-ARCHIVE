@@ -1,0 +1,22 @@
+function [ handles ] = pushUpChanges( handles, file, varargin)
+%pushUpChanges for a local change to a file, this function will push those
+%changes up to the patient list level in the handles
+%optional 3rd parameter can give custom file number
+
+patientNum = handles.currentPatientNum;
+
+currentPatient = handles.patients(patientNum);
+
+if length(varargin) == 1 %custom file number given
+    fileNum = varargin{1};
+else
+    fileNum = currentPatient.currentFileNum;
+end
+
+currentPatient.files(fileNum) = file;
+currentPatient.changesPending = true;
+
+handles.patients(patientNum) = currentPatient;
+
+end
+

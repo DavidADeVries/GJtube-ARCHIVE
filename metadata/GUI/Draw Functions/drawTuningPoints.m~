@@ -1,0 +1,98 @@
+function [ handles ] = drawTuningPoints(currentFile, handles)
+%drawTuningPoints draws the tuning points to augment the tube's position
+
+origTubePoints = file.tubePoints;
+
+tubePoints = currentFile.getTubePoints(); %auto adjusted for ROI on
+
+waypointPassbys = checkForRoiOn(file.waypointPassbys, file.roiOn, file.roiCoords);
+
+spacing = 10; %how often tuning points are placed
+
+spaceNumber = 2;
+
+tuningPoints = cell(0);
+tuningPointNum = 1;
+
+numTuningPoints = floor(length(tubePoints) / spacing);
+
+colorStep = 1/numTuningPoints; %color will change incrementally
+
+for i=1:length(tubePoints)    
+
+    if isequal(tubePoints(i,:), waypointPassbys(spaceNumber - 1, :))
+        spaceNumber = spaceNumber + 1;
+    end
+
+    if mod(i, spacing) == 0
+        handle = impoint(imageDisplayHandle, tubePoints(i,:));
+        
+        setColor(handle, [0.5+tuningPointNum*(colorStep/2), tuningPointNum*(colorStep/2), 0]);            
+
+        tuningPoints{tuningPointNum} = TuningPoint(handle, spaceNumber, origTubePoints(i,:)); %store original position with ROI coord shift
+        tuningPointNum = tuningPointNum + 1;
+    end
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+waypointHandles = handles.waypointHandles;
+
+waypoints = currentFile.getWaypoints();
+numWaypoints = length(waypoints);
+
+if currentFile.waypointsOn
+    if isempty(waypointHandles) %create new
+        %constants
+        colour = Constants.WAYPOINT_COLOUR;
+        
+        %create waypoints
+        
+        waypointHandles = impoint.empty(numWaypoints, 0); %empty handle matrix
+        
+        for i=1:numWaypoints            
+            waypointHandles(i) = plotImpoint(waypoints(i,:), colour, draggable, handles.imageAxes);
+        end
+        
+        % push up update
+        handles.waypointHandles = waypointHandles;
+    else %handles not empty, the elements already exist, so just update
+        if toggled %just set visiblity
+            for i=1:numWaypoints
+                set(waypointHandles(i),'Visible','on');
+            end
+        end
+        
+        %update them
+        for i=1:numWaypoints
+            setPosition(waypointHandles(i), waypoints(i,:));
+        end
+    end
+else %turn it off
+    if ~isempty(waypointHandles) %if the objects exist, turn them off
+        for i=1:numWaypoints
+            set(waypointHandles(i),'Visible','off');
+        end
+    end
+end
+
+end
+
