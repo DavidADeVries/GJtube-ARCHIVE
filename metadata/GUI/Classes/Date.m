@@ -14,9 +14,9 @@ classdef Date
             dayString = dicomDate(7:8);
             yearString = dicomDate(1:4);
             
-            date.month = num2str(monthString);
-            date.day = num2str(dayString);
-            date.year = num2str(yearString);
+            date.month = str2num(monthString);
+            date.day = str2num(dayString);
+            date.year = str2num(yearString);
         end
         
         function bool = lt(dateLeft, dateRight) %define less than
@@ -47,6 +47,14 @@ classdef Date
             monthString = num2str(date.month);
             dayString = num2str(date.day);
             yearString = num2str(date.year);
+            
+            if length(monthString) == 1
+                monthString = strcat('0', monthString);
+            end
+            
+            if length(dayString) == 1
+                dayString = strcat('0', dayString);
+            end
             
             string = strcat(monthString, '-', dayString, '-', yearString);
         end

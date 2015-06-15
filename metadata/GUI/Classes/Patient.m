@@ -36,28 +36,26 @@ classdef Patient
         %% addFile %%
         function patient = addFile(patient, file)            
             oldFiles = patient.files;
-            numOldFiles = length(oldFiles);
-            
-            numFiles = length(patient.files);
-            
-            newFiles = File.empty(numFiles + 1, 0);
-            
-            oldFileCounter = 1;
-            
-            newCurrentFileNum = 0;
-            
-            for i=1:numFiles + 1
-                if oldFileCounter > numOldFiles || file.date < oldFiles(oldFileCounter).date 
-                    newFiles(i) = file;
-                    newCurrentFileNum = i;
-                else
-                    newFiles(i) = oldFiles(oldFileCounter);
-                    oldFileCounter = oldFileCounter + 1;
+            numOldFiles = length(oldFiles);            
+                                    
+            for i=1:numOldFiles
+                if file.date < oldFiles(i).date
+                    break;
                 end
             end
-            
-            patient.files = newFiles;
-            patient.currentFileNum = newCurrentFileNum;
+                      
+            if i == 1
+                newFiles = [file, oldFiles];                     
+                patient.currentFileNum = 1;
+            elseif i == numOldFiles
+                newFiles = [oldFiles, file];                                 
+                patient.currentFileNum = numOldFiles+1;
+            else            
+                newFiles = [oldFiles(1:i-1), file, oldFiles(i:numOldFiles)];
+                patient.currentFileNum = i;
+            end
+                        
+            patient.files = newFiles;   
         end
         
         %% getNumFiles %%
