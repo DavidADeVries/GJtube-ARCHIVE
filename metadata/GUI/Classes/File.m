@@ -377,6 +377,16 @@ classdef File
             
             file = cacheEntry.restoreToFile(file); 
         end
+        
+        %% getMeasurements %%
+        function [measurements] = getMeasurements(file)
+            %returns the measurements needed to be outputted for analysis
+            %results stored in struct
+            A = 54.2;
+            B= 12.9;
+            
+            measurements = struct('A',A,'B',B);
+        end
 
     end
     

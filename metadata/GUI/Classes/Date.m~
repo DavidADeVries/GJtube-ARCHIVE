@@ -60,10 +60,10 @@ classdef Date
         end
         
         function numDays = daysSinceYear0(date)
-            dateString = datestr([date.year, date.month, date.day, 0, 0, 0]);
+            dateString = datestr([date.year, date.month, date.day]);
             epoch = cdfepoch(dateString);
             
-            numDays = todatenum(epoch); %since 00/00/0000
+            numSeconds = todatenum(epoch);
         end
     end
     

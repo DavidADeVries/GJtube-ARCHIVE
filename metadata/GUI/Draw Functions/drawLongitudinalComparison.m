@@ -8,13 +8,12 @@ deltaLineDisplayLines = handles.deltaLineDisplayLines;
 deltaLineTextLabels = handles.deltaLineTextLabels;
 
 currentFile = currentPatient.getCurrentFile();
-        
-baseRefPoints = currentFile.refPoints;
-longitudinalFileNumbers = currentPatient.getLongitudinalDisplayFileNumbers();
-numTubes = length(longitudinalFileNumbers);
 
 if currentPatient.longitudinalOn
-    if isempty(longitudinalDisplayTubes) || isempty(deltaLineDisplayLines) || isempty(deltaLineTextLabels) %create new 
+    baseRefPoints = currentFile.refPoints;
+    longitudinalFileNumbers = currentPatient.getLongitudinalDisplayFileNumbers();
+    numTubes = length(longitudinalFileNumbers);
+    if isempty(longitudinalDisplayTubes) || isempty(deltaLineDisplayLines) || isempty(deltaLineTextLabels) %create new
         %constants
         
         %for tube

@@ -37,11 +37,15 @@ classdef Patient
         function patient = addFile(patient, file)            
             oldFiles = patient.files;
             numOldFiles = length(oldFiles);            
-                                    
-            for i=1:numOldFiles
+            
+            i = 1; %needs to be defined before hand, in case numOldFiles = 0;
+            
+            while i <= numOldFiles
                 if file.date < oldFiles(i).date
                     break;
                 end
+                
+                i = i+1;
             end
                       
             if i == 1

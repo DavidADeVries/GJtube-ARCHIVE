@@ -1,0 +1,2 @@
+Patient Id,Patient Sex,Patient DOB (MM/YYYY),Sequence Number,Acquisition Date (MM/DD/YYYY),Age at Acquisition (days),Modality,Study Description,Series Description,Measurement A (u),Measurement B (u)
+2021539,M,02-11-1993,1,10-23-2009,6098,XA,AI GJ Tube Maintenance,FLU,54.2000,12.9000

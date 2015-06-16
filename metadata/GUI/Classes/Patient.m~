@@ -36,47 +36,28 @@ classdef Patient
         %% addFile %%
         function patient = addFile(patient, file)            
             oldFiles = patient.files;
-            numOldFiles = length(oldFiles);
+            numOldFiles = length(oldFiles);            
             
-            newFiles = File.empty(numOldFiles + 1, 0);
+            i = 1; %needs to be defined before hand, in case numOldFiles = 0;
             
-            oldFileCounter = 1;
-            
-            newCurrentFileNum = 0;
-                        
-            newFilePlaced = false;
-                        
-            for i=1:numOldFiles
+            while i <= numOldFiles
                 if file.date < oldFiles(i).date
                     break;
                 end
             end
-            
-            newFiles = [oldFiles(1:i), file, oldFiles(i+1:numOldFiles)];
-            
-%             for i=1:numOldFiles + 1
-%                 if (oldFileCounter > numOldFiles) || (~newFilePlaced && file.date < oldFiles(oldFileCounter).date)
-%                     newFiles(i) = file;
-%                     newCurrentFileNum = i;
-%                     newFilePlaced = true;
-%                 else
-%                     newFiles(i) = oldFiles(oldFileCounter);
-%                     oldFileCounter = oldFileCounter + 1;
-%                 end
-%             end
-            
-            patient.files = newFiles;                        
-            patient.currentFileNum = newCurrentFileNum;
-            
-            disp('Inserting');
-            
-            disp(display(file.date));
-            
-            disp('New Sort');
-            
-            for i=1:length(newFiles)
-                disp(display(newFiles(i).date));
+                      
+            if i == 1
+                newFiles = [file, oldFiles];                     
+                patient.currentFileNum = 1;
+            elseif i == numOldFiles
+                newFiles = [oldFiles, file];                                 
+                patient.currentFileNum = numOldFiles+1;
+            else            
+                newFiles = [oldFiles(1:i-1), file, oldFiles(i:numOldFiles)];
+                patient.currentFileNum = i;
             end
+                        
+            patient.files = newFiles;   
         end
         
         %% getNumFiles %%

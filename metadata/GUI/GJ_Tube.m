@@ -33,7 +33,7 @@ rmpath('./Old Stuff [Delete]'); %ignore old files
 
 % Edit the above text to modify the response to help GJ_Tube
 
-% Last Modified by GUIDE v2.5 15-Jun-2015 12:18:30
+% Last Modified by GUIDE v2.5 15-Jun-2015 15:43:39
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -310,6 +310,65 @@ if imageFilename ~= 0 %user didn't click cancel!
     guidata(hObject, handles);    
 end
 
+% --------------------------------------------------------------------
+function exportAllPatients_ClickedCallback(hObject, eventdata, handles)
+% hObject    handle to menuExportPatient (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+exportPatients(handles.patients);
+
+
+% --------------------------------------------------------------------
+function exportPatient_ClickedCallback(hObject, eventdata, handles)
+% hObject    handle to exportPatient (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+exportPatients(getCurrentPatient(handles));
+
+
+% --------------------------------------------------------------------
+function closeAllPatients_ClickedCallback(hObject, eventdata, handles)
+% hObject    handle to closeAllPatients (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+for i=1:handles.numPatients
+    patient = handles.patients(i);
+    
+    closeCancelled = false;
+    saveFirst = false;
+    
+    if patient.changesPending;
+        [closeCancelled, saveFirst] = pendingChangesDialog(); %prompts user if they want to save unsaved changes
+    end
+    
+    if closeCancelled
+        break;
+    elseif saveFirst %user chose to save
+        patient.saveToDisk();
+    end  
+end
+
+if ~closeCancelled
+    handles.patients = Patient.empty;
+    handles.currentPatientNum = 0;
+    handles.numPatients = 0;
+    
+    currentFile = File.empty;
+    
+    %GUI updated
+    updatePatientSelector(handles);
+    updateImageInfo(currentFile, handles);
+    updateToggleButtons(currentFile, handles);
+    
+    %displayed imaged updated
+    handles = drawAll(currentFile, handles, hObject);
+    
+    %push up changes
+    guidata(hObject, handles);
+end
 
 function interpolConstrain_Callback(hObject, eventdata, handles)
 % hObject    handle to interpolConstrain (see GCBO)
@@ -760,7 +819,7 @@ handles = updateFile(currentFile, updateUndo, pendingChanges, handles);
 
 % update display
 toggled = true;
-handles = drawQuickMeasureWithCallback(currentFile, handles, hObject, toggled);
+handles = drawQuickMelasureWithCallback(currentFile, handles, hObject, toggled);
 
 updateToggleButtons(getCurrentFile(handles), handles);
 
@@ -1426,7 +1485,7 @@ guidata(hObject, handles);
 
 % --------------------------------------------------------------------
 function closePatient_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to closePatient (see GCBO)
+% hObject    handle to closeAllPatients (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
@@ -1857,3 +1916,28 @@ function menuAddPatient_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 addPatient_ClickedCallback(hObject, eventdata, handles);
+
+% --------------------------------------------------------------------
+function menuExportPatient_Callback(hObject, eventdata, handles)
+% hObject    handle to menuExportPatient (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+exportPatient_ClickedCallback(hObject, eventdata, handles);
+
+
+% --------------------------------------------------------------------
+function menuCloseAllPatients_Callback(hObject, eventdata, handles)
+% hObject    handle to menuCloseAllPatients (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+closeAllPatients_ClickedCallback(hObject, eventdata, handles)
+
+% --------------------------------------------------------------------
+function menuExportAllPatients_Callback(hObject, eventdata, handles)
+% hObject    handle to menuExportAllPatients (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+exportAllPatients_ClickedCallback(hObject, eventdata, handles);

@@ -36,20 +36,22 @@ if currentFile.quickMeasureOn
         handles.quickMeasureLineHandle = quickMeasureLineHandle;
         handles.quickMeasureTextLabel = textLabel;
     else %handles not empty, the elements already exist, so just update
+        disp('1.1');
         if toggled %set visiblity
             set(quickMeasureLineHandle, 'Visible', 'on');
             quickMeasureTextLabel.setVisible('on');
+        else
+            %update them
+            line = createQuickMeasureLine(quickMeasurePoints);
+            [unitString, unitConversion] = currentFile.getUnitConversion();
+            
+            setPosition(quickMeasureLineHandle, quickMeasurePoints(:,1), quickMeasurePoints(:,2));
+            quickMeasureTextLabel.update(line, unitString, unitConversion);
         end
-        
-        %update them
-        line = createQuickMeasureLine(quickMeasurePoints);
-        [unitString, unitConversion] = currentFile.getUnitConversion();
-        
-        setPosition(quickMeasureLineHandle, quickMeasurePoints(:,1), quickMeasurePoints(:,2));
-        quickMeasureTextLabel.update(line, unitString, unitConversion);
     end
 else %turn it off
     if ~isempty(quickMeasureLineHandle) && ~isempty(quickMeasureTextLabel) %if the objects exist, turn them off
+        disp('clear');
         set(quickMeasureLineHandle, 'Visible', 'off');
         quickMeasureTextLabel.setVisible('off');
     end
