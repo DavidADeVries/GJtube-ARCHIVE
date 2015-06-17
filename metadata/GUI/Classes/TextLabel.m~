@@ -95,10 +95,12 @@ classdef TextLabel
                 if length(varargin) == 3
                     label = varargin{3};
                     
-                    set(textLabel.mainText,'String',label);
-                    
-                    for i=1:4
-                        set(handles{i}, 'String', label);
+                    if ~isempty(label)
+                        set(textLabel.mainText,'String',label);
+                        
+                        for i=1:4
+                            set(handles{i}, 'String', label);
+                        end
                     end
                 end
             end
@@ -134,18 +136,37 @@ classdef TextLabel
         end
         
         %% setAbsolutePosition %%
-        function [] = setAbsolutePosition(textLabel, position)
-            handles = {textLabel.mainText, textLabel.leftBorder, textLabel.rightBorder, textLabel.topBorder, textLabel.bottomBorder};
+        function [] = setAbsolutePosition(textLabel)
+            handle = label.mainText;
             
-            for i=1:length(handles)
-                handle = handles{i};
-                
-                set(handle, 'Units', 'pixels');
-                pos = get(handle, 'Position');
-                set(handle, 'Position', [pos(1) + position(1), pos(2) - position(2)]);
-                set(handle, 'Units', 'data');
-            end
+            set(handle, 'Units', 'pixels');
+            pos = get(handle, 'Position');
+            set(handle, 'Position', [pos(1) + 5, pos(2) - (i*5) - 5]);
+            set(handle, 'Units', 'data');
+            handle = label.leftBorder;
             
+            set(handle, 'Units', 'pixels');
+            pos = get(handle, 'Position');
+            set(handle, 'Position', [pos(1) + 5, pos(2) - (i*5) - 5]);
+            set(handle, 'Units', 'data');
+            handle = label.rightBorder;
+            
+            set(handle, 'Units', 'pixels');
+            pos = get(handle, 'Position');
+            set(handle, 'Position', [pos(1) + 5, pos(2) - (i*5) - 5]);
+            set(handle, 'Units', 'data');
+            handle = label.topBorder;
+            
+            set(handle, 'Units', 'pixels');
+            pos = get(handle, 'Position');
+            set(handle, 'Position', [pos(1) + 5, pos(2) - (i*5) - 5]);
+            set(handle, 'Units', 'data');
+            handle = label.bottomBorder;
+            
+            set(handle, 'Units', 'pixels');
+            pos = get(handle, 'Position');
+            set(handle, 'Position', [pos(1) + 5, pos(2) - (i*5) - 5]);
+            set(handle, 'Units', 'data');
         end
         
     end

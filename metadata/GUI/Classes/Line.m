@@ -58,7 +58,9 @@ classdef Line
                 
                 roundedLength = round(10*convertedLength) / 10; % round to one decimal place
                 
-                tagString = ['\bf', line.tagStringPrefix, num2str(roundedLength), unitString];
+                tagString = [line.tagStringPrefix, num2str(roundedLength), unitString];
+                
+                %tagString = ['\bf', tagString]; %bold if desired
             else
                 tagString = '';
             end

@@ -410,10 +410,6 @@ classdef File
             
             tubeMetrics = file.calcTubeMetrics();
             
-            convertedMetrics = unitConversion(1) .* tubeMetrics;
-            
-            roundedMetrics = round(10 .* convertedMetrics) ./ 10;
-            
             numTubeMetrics = length(tubeMetrics);            
             tubeMetricStrings = cell(numTubeMetrics);
             
@@ -422,6 +418,10 @@ classdef File
                     tubeMetricStrings{i} = '';
                 end
             else
+                convertedMetrics = unitConversion(1) .* tubeMetrics;
+            
+                roundedMetrics = round(10 .* convertedMetrics) ./ 10;
+                
                 tubeMetricStrings{1} = ['Tube Length from Pylorus to Point D, e = ', num2str(roundedMetrics(1)), unitString];
                 tubeMetricStrings{2} = ['Tube Length from Point A to Point D, f = ', num2str(roundedMetrics(2)), unitString];
             end

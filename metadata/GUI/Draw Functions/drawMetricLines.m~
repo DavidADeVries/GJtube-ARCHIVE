@@ -50,11 +50,13 @@ if currentFile.metricsOn
         % display tube metrics
         for i=1:numTubeMetrics
             point = [1,1]; %display in upper corner
-            textLabel = TextLabel(point, tubeMetricStrings{i}, labelBorderColour, textColour, fontSize);
+            label = TextLabel(point, tubeMetricStrings{i}, labelBorderColour, textColour, fontSize);
             
-            textLabel.setAbsolutePosition([5, (i*20) - 7]);          
+            label.setAbsolutePosition(5, (i*20) + 5);
             
-            textLabels(numMetricLines+i) = textLabel;
+            
+            
+            textLabels(numMetricLines+i) = label;
         end
         
         % push up update
@@ -86,9 +88,8 @@ if currentFile.metricsOn
         end
         
         for i=1:numTubeMetrics
-            textLabels(numMetricLines+i).update([1,1], tubeMetricStrings{i});
-            
-            textLabels(numMetricLines+i).setAbsolutePosition([5, (i*20) - 7]); 
+            point = [5, (i*7) + 5]; %display in upper corner
+            textLabels(numMetricLines+i).update(point, tubeMetricStrings{i});
         end
     end      
 else %turn it off
