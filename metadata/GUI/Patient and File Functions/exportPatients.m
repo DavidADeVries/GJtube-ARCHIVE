@@ -5,7 +5,7 @@ function [ ] = exportPatients(patients)
 [cancelled, overwrite] = overwriteOrAppendDialog(); %user can choose to overwrite file or append to it
 
 if ~cancelled
-    path = strcat('/data/projects/GJtube/rawdata/*.csv');
+    path = strcat('/data/projects/GJtube/testdata/*.csv');
     
     if overwrite
         [exportFilename, exportPathname] = uiputfile(path,'Export Analysis Data');

@@ -3,12 +3,18 @@ function [ handles ] = deleteMetricPoints( handles )
 %handles to reflect this
 
 metricPointHandles = handles.metricPointHandles;
+metricPointTextLabels = handles.metricPointTextLabels;
 
 for i=1:length(metricPointHandles)
     delete(metricPointHandles(i));
 end
 
+for i=1:length(metricPointTextLabels)
+    metricPointTextLabels(i).delete();
+end
+
 handles.metricPointHandles = impoint.empty;
+handles.metricPointTextLabels = TextLabel.empty;
 
 end
 

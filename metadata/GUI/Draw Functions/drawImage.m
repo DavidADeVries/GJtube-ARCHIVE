@@ -15,6 +15,7 @@ handles.displayTube = DisplayTube.empty;
 handles.metricLineTextLabels = TextLabel.empty;
 handles.metricLineDisplayLines = DisplayLine.empty;
 handles.metricPointHandles = impoint.empty;
+handles.metricPointTextLabels = TextLabel.empty;
 handles.refLineHandle = imline.empty;
 handles.midlineHandle = imline.empty;
 handles.quickMeasureLineHandle = imline.empty;

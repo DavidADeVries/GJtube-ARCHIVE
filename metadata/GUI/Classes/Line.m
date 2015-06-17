@@ -6,18 +6,27 @@ classdef Line
         startPoint
         endPoint
         tagPoint
-        tagString = '';
+        tagStringPrefix = '';
         textAlign %text 'HorizontalAlginment' property value 'left', 'center', or 'right'
+        isBridge = false; % a bridge is a line used to not show a measurement, but to be a reference line for another line that does display a measurement
     end
     
     methods
         %% Constructor %%
-        function line = Line(varargin)
-            if length(varargin) == 4
+        function line = Line(varargin) %params: (startPoint, endPoint, tagPoint, textAlign, isBridge*, tagString*)
+            if length(varargin) >= 4
                 line.startPoint = varargin{1};
                 line.endPoint = varargin{2};
                 line.tagPoint = varargin{3};
                 line.textAlign = varargin{4};
+            end
+            
+            if length(varargin) >= 5
+                line.isBridge = varargin{5};
+            end
+            
+            if length(varargin) >= 6
+                line.tagStringPrefix = varargin{6};
             end
         end
         
@@ -44,12 +53,12 @@ classdef Line
         function [ tagString] = getTagString( line, unitString, unitConversion)
             %getTagString gives a string that may be uses to tag the line given
             
-            if ~isempty(unitString)
+            if ~isempty(unitString) && ~line.isBridge
                 convertedLength = line.getLength(unitConversion);
                 
                 roundedLength = round(10*convertedLength) / 10; % round to one decimal place
                 
-                tagString = strcat('\bf',num2str(roundedLength), unitString);
+                tagString = ['\bf', line.tagStringPrefix, num2str(roundedLength), unitString];
             else
                 tagString = '';
             end

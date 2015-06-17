@@ -1,0 +1,9 @@
+Patient Id,Patient Sex,Patient DOB (MM/YYYY),Sequence Number,Acquisition Date (MM/DD/YYYY),Age at Acquisition (days),Modality,Study Description,Series Description,Measurement a (u),Measurement b (u),Measurement c (u),Measurement d (u),Measurement e (u),Measurement f (u)
+2524426,F,02-11-1993,1,06-18-2014,7797,XA,AI GJ Tube Maintenance,FLU,   3.4,   2.8,   5.8,   1.2,  11.6,  10.7
+,,,2,06-18-2014,7797,XA,AI GJ Tube Maintenance,FLU,   4.0,   2.7,   6.3,   1.2,  11.9,  10.9
+,,,3,02-23-2015,8047,XA,AI GJ Tube Maintenance,FLU,   2.6,   4.7,   6.1,   0.3,  15.1,  14.4
+,,,4,02-26-2015,8050,XA,AI GJ Tube Maintenance,FLU,   2.4,   2.7,   5.2,   0.1,  10.4,   9.0
+,,,5,02-26-2015,8050,XA,AI GJ Tube Maintenance,FLU,   2.9,   2.7,   5.1,   0.7,   9.3,   8.5
+,,,6,02-26-2015,8050,XA,AI GJ Tube Maintenance,FLU,   3.4,   3.6,   5.8,   0.8,  11.2,  10.6
+,,,7,04-21-2015,8104,XA,AI GJ Tube Maintenance,GJ CHANGE,   2.6,   2.5,   3.7,   0.3,   7.8,   6.9
+,,,8,04-21-2015,8104,XA,AI GJ Tube Maintenance,GJ CHANGE,   2.3,   2.3,   5.0,   0.0,   9.6,   8.3

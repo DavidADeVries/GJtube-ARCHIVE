@@ -14,7 +14,13 @@ classdef Constants
         METRIC_LINE_COLOUR = [0 255 0] / 255; %lime green
         METRIC_LINE_BORDER_COLOUR = [0 0 0] / 255; %black
         
+        METRIC_LINE_BRIDGE_COLOUR = [0 200 0] / 255; %a bit more subdued then the metric lines
+        METRIC_LINE_BRIDGE_ARROW_ENDS = 'none'; %just a line
+        
         METRIC_POINT_COLOUR = [255,255,0] / 255; %yellow
+        METRIC_POINT_LABEL_BORDER_COLOUR = [0 0 0] / 255; %black
+        METRIC_POINT_LABEL_TEXT_COLOUR = [255, 255, 0] / 255; %yellow
+        METRIC_POINT_LABEL_FONT_SIZE = 13;
         
         WAYPOINT_COLOUR = 'c'; %cyan
         

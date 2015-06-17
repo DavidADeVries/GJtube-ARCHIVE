@@ -15,185 +15,109 @@ invRotMatrix = [cosd(-corAngle) -sind(-corAngle); sind(-corAngle) cosd(-corAngle
 % first rotate extrema points into coord system such that midline is
 % vertical
 
-rotExtremaPoints = applyRotationMatrix(metricPoints, rotMatrix);
-rotMidlinePoints = applyRotationMatrix(midlinePoints, rotMatrix);
+pylorusPoint = applyRotationMatrix(metricPoints.pylorusPoint, rotMatrix);
+pointA = applyRotationMatrix(metricPoints.pointA, rotMatrix);
+pointB = applyRotationMatrix(metricPoints.pointB, rotMatrix);
+pointC = applyRotationMatrix(metricPoints.pointC, rotMatrix);
+pointD = applyRotationMatrix(metricPoints.pointD, rotMatrix);
 
-midlineX = rotMidlinePoints(1,1);
-
-maxL = rotExtremaPoints(1,:);
-min = rotExtremaPoints(2,:);
-maxR = rotExtremaPoints(3,:);
-
-maxLX = maxL(1);
-maxLY = maxL(2);
-minX = min(1);
-minY = min(2);
-maxRX = maxR(1);
-maxRY = maxR(2);
+%rotMidlinePoints = applyRotationMatrix(midlinePoints, rotMatrix);
 
 % create the lines
+lines = Line.empty(6,0);
 
 %offsets so that labels don't lie directly on lines
-vertOffset = -3; %px
-horzOffset = -3; %px
+vertOffset = -5; %px
+horzOffset = +3; %px
 
-% maxL to maxR horz:
-startPoint = [maxLX,maxRY];
-endPoint = [maxRX,maxRY];
-halfwayPoint = getHalfwayPoint(startPoint,endPoint);
+% % find lines % %
+isBridge = false; %all these are actual measurement lines, not bridge reference lines
+
+% % line a % %
+startPoint = pointD;
+endPoint = [pylorusPoint(1), pointD(2)];
+
+halfwayPoint = getHalfwayPoint(startPoint, endPoint);
 tagPoint = [halfwayPoint(1), halfwayPoint(2) + vertOffset];
 
-points = [startPoint; endPoint; tagPoint];
+[startPoint, endPoint, tagPoint] = transformForDisplay(startPoint, endPoint, tagPoint, invRotMatrix, roiOn, roiCoords);
 
-points = applyRotationMatrix(points, invRotMatrix);
+tagStringPrefix = 'a = ';
+lines(1) = Line(startPoint, endPoint, tagPoint, 'left', isBridge, tagStringPrefix);
 
-[points] = checkForRoiOn(points, roiOn, roiCoords);
+% % line b % %
+startPoint = pointA;
+endPoint = [pointA(1), pointC(2)];
 
-startPoint = points(1,:);
-endPoint = points(2,:);
-tagPoint = points(3,:);
+tagPoint = [endPoint(1)+horzOffset, endPoint(2)-20]; %didn't want this way halfway, it hit another line. Just a touch above the bottom point
 
-lines(1) = Line(startPoint, endPoint, tagPoint, 'left');
+[startPoint, endPoint, tagPoint] = transformForDisplay(startPoint, endPoint, tagPoint, invRotMatrix, roiOn, roiCoords);
 
-% maxL to maxR vert:
-startPoint = [maxLX,maxLY];
-endPoint = [maxLX,maxRY];
-halfwayPoint = getHalfwayPoint(startPoint,endPoint);
-tagPoint = [halfwayPoint(1)+horzOffset,halfwayPoint(2)];
+tagStringPrefix = 'b = ';
+lines(2) = Line(startPoint, endPoint, tagPoint, 'left', isBridge, tagStringPrefix);
 
-points = [startPoint; endPoint; tagPoint];
+% % line c % %
+startPoint = pointB;
+endPoint = [pointD(1), pointB(2)];
 
-points = applyRotationMatrix(points, invRotMatrix);
+halfwayPoint = getHalfwayPoint(startPoint, endPoint);
+tagPoint = [halfwayPoint(1), halfwayPoint(2) + vertOffset];
 
-[points] = checkForRoiOn(points, roiOn, roiCoords);
+[startPoint, endPoint, tagPoint] = transformForDisplay(startPoint, endPoint, tagPoint, invRotMatrix, roiOn, roiCoords);
 
-startPoint = points(1,:);
-endPoint = points(2,:);
-tagPoint = points(3,:);
+tagStringPrefix = 'c = ';
+lines(3) = Line(startPoint, endPoint, tagPoint, 'left', isBridge, tagStringPrefix);
 
-lines(2) = Line(startPoint, endPoint, tagPoint, 'right');
+% % line d % %
+startPoint = pylorusPoint;
+endPoint = [pylorusPoint(1), pointD(2)];
 
-% maxL to midline:
-startPoint = [maxLX,maxLY];
-endPoint = [midlineX,maxLY];
-halfwayPoint = getHalfwayPoint(startPoint,endPoint);
-tagPoint = [halfwayPoint(1),halfwayPoint(2) + vertOffset];
+halfwayPoint = getHalfwayPoint(startPoint, endPoint);
+tagPoint = [halfwayPoint(1)+horzOffset, halfwayPoint(2)];
 
-points = [startPoint; endPoint; tagPoint];
+[startPoint, endPoint, tagPoint] = transformForDisplay(startPoint, endPoint, tagPoint, invRotMatrix, roiOn, roiCoords);
 
-points = applyRotationMatrix(points, invRotMatrix);
+tagStringPrefix = 'd = ';
+lines(4) = Line(startPoint, endPoint, tagPoint, 'left', isBridge, tagStringPrefix);
 
-[points] = checkForRoiOn(points, roiOn, roiCoords);
+% % find bridges % %
+isBridge = true; %these are just reference lines for the measurment lines, such that their ends are floating in space
 
-startPoint = points(1,:);
-endPoint = points(2,:);
-tagPoint = points(3,:);
+% % bridge for line b % %
+startPoint = pointC;
+endPoint = [pointA(1), pointC(2)];
 
-lines(3) = Line(startPoint, endPoint, tagPoint, 'left');
+halfwayPoint = getHalfwayPoint(startPoint, endPoint);
+tagPoint = [halfwayPoint(1), halfwayPoint(2) + vertOffset];
 
-% maxR to midline:
-startPoint = [midlineX,maxLY];
-endPoint = [maxRX,maxLY];
-halfwayPoint = getHalfwayPoint(startPoint,endPoint);
-tagPoint = [halfwayPoint(1),halfwayPoint(2) + vertOffset];
+[startPoint, endPoint, tagPoint] = transformForDisplay(startPoint, endPoint, tagPoint, invRotMatrix, roiOn, roiCoords);
 
-points = [startPoint; endPoint; tagPoint];
+lines(5) = Line(startPoint, endPoint, tagPoint, 'left', isBridge);
 
-points = applyRotationMatrix(points, invRotMatrix);
+% % bridge for line c % %
+startPoint = pointD;
+endPoint = [pointD(1), pointB(2)];
 
-[points] = checkForRoiOn(points, roiOn, roiCoords);
+halfwayPoint = getHalfwayPoint(startPoint, endPoint);
+tagPoint = [halfwayPoint(1)+horzOffset, halfwayPoint(2)];
 
-startPoint = points(1,:);
-endPoint = points(2,:);
-tagPoint = points(3,:);
+[startPoint, endPoint, tagPoint] = transformForDisplay(startPoint, endPoint, tagPoint, invRotMatrix, roiOn, roiCoords);
 
-lines(4) = Line(startPoint, endPoint, tagPoint, 'left');
-
-% min to maxL vert:
-startPoint = [minX,minY];
-endPoint = [minX,maxLY];
-halfwayPoint = getHalfwayPoint(startPoint,endPoint);
-tagPoint = [halfwayPoint(1)+horzOffset,halfwayPoint(2)];
-
-points = [startPoint; endPoint; tagPoint];
-
-points = applyRotationMatrix(points, invRotMatrix);
-
-[points] = checkForRoiOn(points, roiOn, roiCoords);
-
-startPoint = points(1,:);
-endPoint = points(2,:);
-tagPoint = points(3,:);
-
-lines(5) = Line(startPoint, endPoint, tagPoint, 'right');
-
-% min to midline:
-halfwayPoint = getHalfwayPoint(maxL, min); 
-% this line is not directly touching any points, so the y val will be
-% halfway between two points
-yVal = halfwayPoint(2);
-
-startPoint = [minX,yVal];
-endPoint = [midlineX,yVal];
-halfwayPoint = getHalfwayPoint(startPoint,endPoint);
-tagPoint = [halfwayPoint(1),halfwayPoint(2)+vertOffset];
-
-points = [startPoint; endPoint; tagPoint];
-
-points = applyRotationMatrix(points, invRotMatrix);
-
-[points] = checkForRoiOn(points, roiOn, roiCoords);
-
-startPoint = points(1,:);
-endPoint = points(2,:);
-tagPoint = points(3,:);
-
-lines(6) = Line(startPoint, endPoint, tagPoint, 'left');
-
-% min to maxR horz:
-startPoint = [minX,minY];
-endPoint = [maxRX,minY];
-halfwayPoint = getHalfwayPoint(startPoint,endPoint);
-tagPoint = [halfwayPoint(1),halfwayPoint(2)+vertOffset];
-
-points = [startPoint; endPoint; tagPoint];
-
-points = applyRotationMatrix(points, invRotMatrix);
-
-[points] = checkForRoiOn(points, roiOn, roiCoords);
-
-startPoint = points(1,:);
-endPoint = points(2,:);
-tagPoint = points(3,:);
-
-lines(7) = Line(startPoint, endPoint, tagPoint, 'left');
-
-% min to maxR vert:
-startPoint = [maxRX,minY];
-endPoint = [maxRX,maxRY];
-halfwayPoint = getHalfwayPoint(startPoint,endPoint);
-tagPoint = [halfwayPoint(1)+horzOffset,halfwayPoint(2)];
-
-points = [startPoint; endPoint; tagPoint];
-
-points = applyRotationMatrix(points, invRotMatrix);
-
-[points] = checkForRoiOn(points, roiOn, roiCoords);
-
-startPoint = points(1,:);
-endPoint = points(2,:);
-tagPoint = points(3,:);
-
-lines(8) = Line(startPoint, endPoint, tagPoint, 'right');
+lines(6) = Line(startPoint, endPoint, tagPoint, 'right', isBridge);
 
 end
 
-function [points] = checkForRoiOn(points, roiOn, roiCoords)
-%checkForRoiOn corrects for roiOn if needed
+function [startPoint, endPoint, tagPoint] = transformForDisplay(startPoint, endPoint, tagPoint, invRotMatrix, roiOn, roiCoords)
+%transformForDisplay
+%rotates make into normal coords and applys ROI transform if needed
 
-if roiOn
-    points = nonRoiToRoi(roiCoords, points);
-end
+points = [startPoint; endPoint; tagPoint];
 
+points = applyRotationMatrix(points, invRotMatrix);
+points = confirmMatchRoi(points, roiOn, roiCoords);
+
+startPoint = points(1,:);
+endPoint = points(2,:);
+tagPoint = points(3,:);
 
 end

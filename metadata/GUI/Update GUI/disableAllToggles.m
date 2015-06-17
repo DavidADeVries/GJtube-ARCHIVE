@@ -43,6 +43,16 @@ set(handles.toggleMetrics, 'Enable', 'off');
 set(handles.toggleLongitudinal, 'Enable', 'off');
 set(handles.toggleQuickMeasure, 'Enable', 'off');
 
+set(handles.toggleContrast, 'State', 'off');
+set(handles.toggleRoi, 'State', 'off');
+set(handles.toggleWaypoints, 'State', 'off');
+set(handles.toggleTube, 'State', 'off');
+set(handles.toggleReference, 'State', 'off');
+set(handles.toggleMidline, 'State', 'off');
+set(handles.toggleMetrics, 'State', 'off');
+set(handles.toggleLongitudinal, 'State', 'off');
+set(handles.toggleQuickMeasure, 'State', 'off');
+
 % don't even want to see these ones
 set(handles.generalAccept, 'Visible', 'off');
 set(handles.generalDecline, 'Visible', 'off');

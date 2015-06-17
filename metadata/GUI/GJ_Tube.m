@@ -78,6 +78,7 @@ handles.displayTube = DisplayTube.empty;
 handles.metricLineTextLabels = TextLabel.empty;
 handles.metricLineDisplayLines = DisplayLine.empty;
 handles.metricPointHandles = impoint.empty;
+handles.metricPointTextLabels = TextLabel.empty;
 handles.refLineHandle = imline.empty;
 handles.midlineHandle = imline.empty;
 handles.quickMeasureLineHandle = imline.empty;
@@ -125,7 +126,7 @@ function open_ClickedCallback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-[imageFilename, imagePath, ~] = uigetfile({'*.dcm;*.mat','Valid Files (*.dcm;*.mat)';'*.dcm','DICOM Files (*.dcm)';'*.mat','Patient Analysis Files (*.mat)'},'Select Image','/data/projects/GJtube/rawdata/');
+[imageFilename, imagePath, ~] = uigetfile({'*.dcm;*.mat','Valid Files (*.dcm;*.mat)';'*.dcm','DICOM Files (*.dcm)';'*.mat','Patient Analysis Files (*.mat)'},'Select Image','/data/projects/GJtube/testdata/');
 
 if imageFilename ~= 0 %user didn't click cancel!
     len = length(imageFilename);
@@ -195,7 +196,7 @@ function addPatient_ClickedCallback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-folderPath = uigetdir('/data/projects/GJtube/rawdata/', 'Select Image');
+folderPath = uigetdir('/data/projects/GJtube/testdata/', 'Select Image');
 
 if folderPath ~= 0 %didn't click cancel
     filesToOpen = getAllDicomFiles(folderPath);
@@ -268,7 +269,7 @@ function addFile_ClickedCallback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-[imageFilename, imagePath, ~] = uigetfile({'*.dcm','DICOM Files (*.dcm)'},'Select Image','/data/projects/GJtube/rawdata/');
+[imageFilename, imagePath, ~] = uigetfile({'*.dcm','DICOM Files (*.dcm)'},'Select Image','/data/projects/GJtube/testdata/');
 
 if imageFilename ~= 0 %user didn't click cancel!
     currentPatient = getCurrentPatient(handles);
@@ -793,8 +794,10 @@ handles = updateFile(currentFile, updateUndo, pendingChanges, handles);
 
 % update display
 toggled = true;
+labelsOn = true;
+
 handles = drawMetricLines(currentFile, handles, toggled);
-handles = drawMetricPointsWithCallback(currentFile, handles, hObject, toggled);
+handles = drawMetricPointsWithCallback(currentFile, handles, hObject, toggled, labelsOn);
 
 updateToggleButtons(getCurrentFile(handles), handles);
 
@@ -1062,29 +1065,28 @@ rotMatrix = [cosd(corAngle) -sind(corAngle); sind(corAngle) cosd(corAngle)];
 
 %rotate tube points into coord system where midline is vertical
 corTubePoints = applyRotationMatrix(currentFile.tubePoints, rotMatrix);
-
-[maxL, min, maxR] = findMetricsPoints(corTubePoints);
-
 invRotMatrix = [cosd(-corAngle) -sind(-corAngle); sind(-corAngle) cosd(-corAngle)];
 
-%rotate back into original coord system
-maxL = applyRotationMatrix(maxL, invRotMatrix);
-min = applyRotationMatrix(min, invRotMatrix);
-maxR = applyRotationMatrix(maxR, invRotMatrix);
+%note that findMetricPoints does manipulate the display. It will delete an
+%existing metric points/lines that are drawn
+[metricPoints, handles] = findMetricsPoints(corTubePoints, handles, hObject, invRotMatrix );
 
-currentFile.metricPoints = [maxL; min; maxR];
+currentFile.metricPoints = metricPoints;
 currentFile.metricsOn = true;
 currentFile = currentFile.chooseDisplayUnits();
 
-% finalize changes
+%update file into handles
 updateUndo = true;
-pendingChanges = true; 
+pendingChanges = true;
+
 handles = updateFile(currentFile, updateUndo, pendingChanges, handles);
 
-% update display
+%draw the new points
 toggled = false;
+labelsOn = true;
+
 handles = drawMetricLines(currentFile, handles, toggled);
-handles = drawMetricPointsWithCallback(currentFile, handles, hObject, toggled);
+handles = drawMetricPointsWithCallback(currentFile, handles, hObject, toggled, labelsOn);
 
 updateToggleButtons(getCurrentFile(handles), handles);
 updateUnitPanel(handles, 'on', currentFile.displayUnits, currentFile.getRefPoints());

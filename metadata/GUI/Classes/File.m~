@@ -24,7 +24,7 @@ classdef File
         tubePoints = [];
         refPoints = [];
         midlinePoints = [];
-        metricPoints = [];%extrema/metric points are kept in the order [maxL; min; maxR]
+        metricPoints = MetricPoints.empty;%extrema/metric points are kept in the order [maxL; min; maxR]
         quickMeasurePoints = [];
         
         longitudinalOverlayOn = true; %whether or not it will be included in a longitudinal comparison view
@@ -102,19 +102,7 @@ classdef File
         function midlinePoints = getMidlinePoints(file)
             midlinePoints = confirmMatchRoi(file.midlinePoints, file.roiOn, file.roiCoords);
         end
-        
-        %% setMetricPoints %%
-        % sets points, transforming points in non-ROI coords
-        function file = setMetricPoints(file, metricPoints)
-            file.metricPoints = confirmNonRoi(metricPoints, file.roiOn, file.roiCoords);
-        end
-        
-        %% getMetricPoints %%
-        % gets points adjusting for ROI being on or not
-        function metricPoints = getMetricPoints(file)
-            metricPoints = confirmMatchRoi(file.metricPoints, file.roiOn, file.roiCoords);
-        end
-        
+                
         %% setQuickMeasurePoints %%
         % sets points, transforming points in non-ROI coords
         function file = setQuickMeasurePoints(file, quickMeasurePoints)
@@ -236,55 +224,70 @@ classdef File
             isValid = hasTube && hasReference && hasMetricPoints;
         end
         
+        %% updateMetricPoints %%
+        function file = updateMetricPoints(file, metricPointCoords)
+            localMetricPoints = file.metricPoints;
+            
+            if height(metricPointCoords) == localMetricPoints.getNumPoints()
+                metricPointCoords = confirmNonRoi(metricPointCoords, file.roiOn, file.roiCoords);
+                
+                localMetricPoints.pylorusPoint = metricPointCoords(1,:);
+                localMetricPoints.pointA = metricPointCoords(2,:);
+                localMetricPoints.pointB = metricPointCoords(3,:);
+                localMetricPoints.pointC = metricPointCoords(4,:);
+                localMetricPoints.pointD = metricPointCoords(5,:);
+                
+                file.metricPoints = localMetricPoints;
+            end
+        end
+        
         %% setNewWaypoints %%
-        function [ file ] = setNewWaypoints(file, tuningPoints, handles)
+        function [ file ] = setNewWaypoints(file, tuningPoints, waypointHandles)
             %by looking at shifts in the tuning points, a new set of
             %waypoints is created
             
             % first the original waypoints themselves
-            waypointHandles = handles.waypointHandles;
             
-            numWaypoints = length(waypointHandles);
-            
-            newPositions = zeros(numWaypoints, 2);
-            
-            for i=1:numWaypoints
-                newPositions(i,:) = getPosition(waypointHandles(i));
-            end
-            
-            file = file.setWaypoints(newPositions);
+%             numWaypoints = length(waypointHandles);
+%             
+%             newPositions = zeros(numWaypoints, 2);
+%             
+%             for i=1:numWaypoints
+%                 newPositions(i,:) = getPosition(waypointHandles(i));
+%             end
+%             
+%             file = file.setWaypoints(newPositions);
             
             %now add in the new ones
                         
             numTuningPoints = length(tuningPoints);
-            oldWaypoints = file.getWaypoints();
             
             newWaypoints = [];
             
-            newWaypoints(1:2,:) = oldWaypoints(1:2,:); %first two waypoints remain the same
+            newWaypoints(1,:) = getPosition(waypointHandles(1)); %first two waypoints remain the same
+            newWaypoints(2,:) = getPosition(waypointHandles(2));
             
             spaceNum = 2; %start at space 2 (space 1 is between the first 2 waypoints)
             tuningPointNum = 1;
             oldWaypointNum = 3;
             newWaypointNum = 3;
             
-            while oldWaypointNum <= length(oldWaypoints)
+            while oldWaypointNum <= length(waypointHandles)
                 if tuningPointNum > numTuningPoints
-                    newWaypoints(newWaypointNum,:) = oldWaypoints(oldWaypointNum,:);
+                    newWaypoints(newWaypointNum,:) = getPosition(waypointHandles(oldWaypointNum));%oldWaypoints(oldWaypointNum,:);
                     
                     newWaypointNum = newWaypointNum + 1;
                     oldWaypointNum = oldWaypointNum + 1;
-                elseif tuningPoints{tuningPointNum}.spaceNumber > spaceNum
-                    newWaypoints(newWaypointNum,:) = oldWaypoints(oldWaypointNum,:);
+                elseif tuningPoints(tuningPointNum).spaceNumber > spaceNum
+                    newWaypoints(newWaypointNum,:) = getPosition(waypointHandles(oldWaypointNum));%oldWaypoints(oldWaypointNum,:);
                     
                     oldWaypointNum = oldWaypointNum + 1;
                     newWaypointNum = newWaypointNum + 1;
                     spaceNum = spaceNum + 1;
                 else
-                    currentTuningPointPos = getPosition(tuningPoints(tuningPointNum).handle);
-                                       
+                    currentTuningPointPos = getPosition(tuningPoints(tuningPointNum).handle);          
                     
-                    if isequal(currentTuningPointPos, tuningPoints(tuningPointNum).originalPosition) %point has moved, so not being used
+                    if isequal(currentTuningPointPos, tuningPoints(tuningPointNum).getOriginalPosition(file)) %point has moved, so not being used
                         tuningPointNum = tuningPointNum + 1;
                     else
                         newWaypoints(newWaypointNum,:) = currentTuningPointPos(1,:);
@@ -378,6 +381,64 @@ classdef File
             cacheEntry = file.undoCache.cacheEntries(cacheLocation);
             
             file = cacheEntry.restoreToFile(file); 
+        end
+        
+        %% getMeasurements %%
+        function [measurements] = getMeasurements(file)
+            %returns the measurements needed to be outputted for analysis
+            %results stored in struct
+            lines = calcMetricLines(file);
+            
+            
+            a = ;
+            b = ;
+            c = ;
+            d = ;
+            e = ;
+            f = ;
+            
+            measurements = struct('a',a,'b',b,'c',c,'d',d,'e',e,'f',f);
+        end
+        
+        %% getTubeMetricStrings %%
+        function [tubeMetricStrings] = getTubeMetricStrings(file)
+            [unitString, unitConversion] = file.getUnitConversion;
+            
+            tubeMetrics = file.calcTubeMetrics();
+            
+            convertedMetrics = unitConversion(1) .* tubeMetrics;
+            
+            roundedMetrics = round(10 .* convertedMetrics) ./ 10;
+            
+            numTubeMetrics = length(tubeMetrics);            
+            tubeMetricStrings = cell(numTubeMetrics);
+            
+            if isempty(unitString) %empty strings
+                for i=1:numTubeMetrics
+                    tubeMetricStrings{i} = '';
+                end
+            else
+                tubeMetricStrings{1} = ['Tube Length from Pylorus to Point D, e = ', num2str(roundedMetrics(1)), unitString];
+                tubeMetricStrings{2} = ['Tube Length from Point A to Point D, f = ', num2str(roundedMetrics(2)), unitString];
+            end
+            
+        end
+        
+        %% calcTubeMetrics %%
+        % calculates the along tube distance from pylorus and point A to
+        % point D, in pixels
+        function [tubeMetrics] = calcTubeMetrics(file)
+            localMetricPoints = file.metricPoints;
+            localTubePoints = file.tubePoints;
+            
+            pylorusTubePointNum = getClosestTubePointNum(localMetricPoints.pylorusPoint, localTubePoints);
+            pointATubePointNum = getClosestTubePointNum(localMetricPoints.pointA, localTubePoints);
+            pointDTubePointNum = getClosestTubePointNum(localMetricPoints.pointD, localTubePoints);
+            
+            interTubePointDistance = norm(localTubePoints(1,:) - localTubePoints(2,:));
+            
+            tubeMetrics(1) = (pointDTubePointNum - pylorusTubePointNum) * interTubePointDistance;
+            tubeMetrics(2) = (pointDTubePointNum - pointATubePointNum) * interTubePointDistance;
         end
 
     end
