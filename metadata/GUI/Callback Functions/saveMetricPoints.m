@@ -12,13 +12,13 @@ metricPointHandles = handles.metricPointHandles;
 
 numMetricPointHandles = length(metricPointHandles);
 
-metricPoints = zeros(numMetricPointHandles,2);
+metricPointCoords = zeros(numMetricPointHandles,2);
 
 for i=1:numMetricPointHandles
-   metricPoints(i,:) = getPosition(metricPointHandles(i));
+    metricPointCoords(i,:) = getPosition(metricPointHandles(i));
 end
 
-currentFile = currentFile.setMetricPoints(metricPoints);
+currentFile = currentFile.updateMetricPoints(metricPointCoords);
 
 % updateUndo/pendingChanges should only be done at end of click and drag
 % (clickup listener callback)
@@ -29,11 +29,14 @@ handles = updateFile(currentFile, updateUndo, pendingChanges, handles);
 
 % update other components as needed
 toggled = false;
+labelsOn = true;
 
 handles = drawMetricLines(currentFile, handles, toggled);
+handles = drawMetricPointsWithCallback(currentFile, handles, hObject, toggled, labelsOn);
 
 % push up changes
 guidata(hObject, handles);
+
 
 end
 

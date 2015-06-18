@@ -1,0 +1,2 @@
+Patient Id,Patient Sex,Patient DOB (MM/YYYY),Sequence Number,Acquisition Date (MM/DD/YYYY),Age at Acquisition (days),Modality,Study Description,Series Description,Measurement a (u),Measurement b (u),Measurement c (u),Measurement d (u),Measurement e (u),Measurement f (u)
+2524426,F,02-11-1993,1,04-21-2015,8104,XA,AI GJ Tube Maintenance,GJ CHANGE,   3.0,   1.9,   3.9,   0.8,   7.2,   6.5

@@ -9,19 +9,31 @@ if handles.numPatients == 0 %if no patients, only allow opening new files
     
     set(handles.menuOpen, 'Enable', 'on');
     set(handles.open, 'Enable', 'on');
+    set(handles.menuAddPatient, 'Enable', 'on');
+    set(handles.addPatient, 'Enable', 'on');
 elseif isempty(file) %patient open, but no files. Can only perform patient operations
     disableAllToggles(handles);
     
     set(handles.open, 'Enable', 'on');
     set(handles.savePatient, 'Enable', 'on');
     set(handles.saveAll, 'Enable', 'on');
+    set(handles.exportPatient, 'Enable', 'on');
+    set(handles.exportAllPatients, 'Enable', 'on');
+    set(handles.addPatient, 'Enable', 'on');
+    set(handles.addFile, 'Enable', 'on');
     set(handles.closePatient, 'Enable', 'on');
+    set(handles.closeAllPatients, 'Enable', 'on');
     
     set(handles.menuOpen, 'Enable', 'on');
     set(handles.menuSavePatient, 'Enable', 'on');
     set(handles.menuSavePatientAs, 'Enable', 'on');
     set(handles.menuSaveAll, 'Enable', 'on');
+    set(handles.menuExportPatient, 'Enable', 'on');
+    set(handles.menuExportAllPatients, 'Enable', 'on');
+    set(handles.menuAddPatient, 'Enable', 'on');
+    set(handles.menuAddFile, 'Enable', 'on');
     set(handles.menuClosePatient, 'Enable', 'on');
+    set(handles.menuCloseAllPatients, 'Enable', 'on');
     
     set(handles.patientSelector, 'Enable', 'on');   
     
@@ -35,7 +47,12 @@ else %general toggles that must be turned on if any file is open, regardless of 
     set(handles.open, 'Enable', 'on');
     set(handles.savePatient, 'Enable', 'on');
     set(handles.saveAll, 'Enable', 'on');
+    set(handles.exportPatient, 'Enable', 'on');
+    set(handles.exportAllPatients, 'Enable', 'on');
+    set(handles.addPatient, 'Enable', 'on');
+    set(handles.addFile, 'Enable', 'on');
     set(handles.closePatient, 'Enable', 'on');
+    set(handles.closeAllPatients, 'Enable', 'on');
     set(handles.removeFile, 'Enable', 'on');
     set(handles.zoomIn, 'Enable', 'on');
     set(handles.zoomOut, 'Enable', 'on');
@@ -51,7 +68,12 @@ else %general toggles that must be turned on if any file is open, regardless of 
     set(handles.menuSavePatient, 'Enable', 'on');
     set(handles.menuSavePatientAs, 'Enable', 'on');
     set(handles.menuSaveAll, 'Enable', 'on');
+    set(handles.menuExportPatient, 'Enable', 'on');
+    set(handles.menuExportAllPatients, 'Enable', 'on');
+    set(handles.menuAddPatient, 'Enable', 'on');
+    set(handles.menuAddFile, 'Enable', 'on');
     set(handles.menuClosePatient, 'Enable', 'on');
+    set(handles.menuCloseAllPatients, 'Enable', 'on');
     set(handles.menuRemoveFile, 'Enable', 'on');
     %     set(handles.menuzoomIn, 'Enable', 'on');
     %     set(handles.menuzoomOut, 'Enable', 'on');
@@ -187,7 +209,7 @@ else %general toggles that must be turned on if any file is open, regardless of 
         set(handles.menuToggleMetrics, 'Checked', 'off');
     end
     
-    if isempty(file.midlinePoints) || isempty(file.tubePoints)
+    if isempty(file.midlinePoints)
         set(handles.calcMetrics, 'Enable', 'off');
         set(handles.menuCalcMetrics, 'Enable', 'off');
     else

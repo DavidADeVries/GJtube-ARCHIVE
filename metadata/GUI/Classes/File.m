@@ -24,7 +24,7 @@ classdef File
         tubePoints = [];
         refPoints = [];
         midlinePoints = [];
-        metricPoints = [];%extrema/metric points are kept in the order [maxL; min; maxR]
+        metricPoints = MetricPoints.empty;%extrema/metric points are kept in the order [maxL; min; maxR]
         quickMeasurePoints = [];
         
         longitudinalOverlayOn = true; %whether or not it will be included in a longitudinal comparison view
@@ -102,19 +102,7 @@ classdef File
         function midlinePoints = getMidlinePoints(file)
             midlinePoints = confirmMatchRoi(file.midlinePoints, file.roiOn, file.roiCoords);
         end
-        
-        %% setMetricPoints %%
-        % sets points, transforming points in non-ROI coords
-        function file = setMetricPoints(file, metricPoints)
-            file.metricPoints = confirmNonRoi(metricPoints, file.roiOn, file.roiCoords);
-        end
-        
-        %% getMetricPoints %%
-        % gets points adjusting for ROI being on or not
-        function metricPoints = getMetricPoints(file)
-            metricPoints = confirmMatchRoi(file.metricPoints, file.roiOn, file.roiCoords);
-        end
-        
+                
         %% setQuickMeasurePoints %%
         % sets points, transforming points in non-ROI coords
         function file = setQuickMeasurePoints(file, quickMeasurePoints)
@@ -224,7 +212,7 @@ classdef File
             
         end
         
-        %% isValid %%
+        %% isValidForLongitudinal %%
         function [isValid] = isValidForLongitudinal(file)
             %returns if the file is valid to be used in a longitudinal
             %comparison (must have certain points set)
@@ -234,6 +222,23 @@ classdef File
             hasMetricPoints = ~isempty(file.metricPoints);
             
             isValid = hasTube && hasReference && hasMetricPoints;
+        end
+        
+        %% updateMetricPoints %%
+        function file = updateMetricPoints(file, metricPointCoords)
+            localMetricPoints = file.metricPoints;
+            
+            if height(metricPointCoords) == localMetricPoints.getNumPoints()
+                metricPointCoords = confirmNonRoi(metricPointCoords, file.roiOn, file.roiCoords);
+                
+                localMetricPoints.pylorusPoint = metricPointCoords(1,:);
+                localMetricPoints.pointA = metricPointCoords(2,:);
+                localMetricPoints.pointB = metricPointCoords(3,:);
+                localMetricPoints.pointC = metricPointCoords(4,:);
+                localMetricPoints.pointD = metricPointCoords(5,:);
+                
+                file.metricPoints = localMetricPoints;
+            end
         end
         
         %% setNewWaypoints %%
@@ -376,6 +381,80 @@ classdef File
             cacheEntry = file.undoCache.cacheEntries(cacheLocation);
             
             file = cacheEntry.restoreToFile(file); 
+        end
+        
+        %% getMeasurements %%
+        function [measurements] = getMeasurements(file)
+            %returns the measurements needed to be outputted for analysis
+            %results stored in struct
+            metricLines = calcMetricLines(file);
+            tubeMetrics = calcTubeMetrics(file);
+            
+            file.displayUnits = 'relative'; %NOTE: these changes to the file are not getting pushed back
+            
+            [~, unitConversion] = file.getUnitConversion();
+                                   
+            a = metricLines(1).getLength(unitConversion);
+            b = metricLines(2).getLength(unitConversion);
+            c = metricLines(3).getLength(unitConversion);
+            d = metricLines(4).getLength(unitConversion);
+            
+            if isempty(tubeMetrics)
+                e = 0;
+                f = 0;
+            else
+                e = tubeMetrics(1) * unitConversion(1);
+                f = tubeMetrics(2) * unitConversion(1);
+            end
+            
+            measurements = struct('a',a,'b',b,'c',c,'d',d,'e',e,'f',f);
+        end
+        
+        %% getTubeMetricStrings %%
+        function [tubeMetricStrings] = getTubeMetricStrings(file)
+            [unitString, unitConversion] = file.getUnitConversion;
+            
+            tubeMetrics = file.calcTubeMetrics();
+                     
+            numTubeMetrics = length(tubeMetrics);            
+            tubeMetricStrings = cell(numTubeMetrics);
+            
+            if numTubeMetrics == 0
+                tubeMetricStrings = {'',''}; %tubepoints must not be defined
+            elseif isempty(unitString) %empty strings
+                for i=1:numTubeMetrics
+                    tubeMetricStrings{i} = '';
+                end
+            else
+                convertedMetrics = unitConversion(1) .* tubeMetrics;
+            
+                roundedMetrics = round(10 .* convertedMetrics) ./ 10;
+                
+                tubeMetricStrings{1} = ['Tube Length from Pylorus to Point D, e = ', num2str(roundedMetrics(1)), unitString];
+                tubeMetricStrings{2} = ['Tube Length from Point A to Point D, f = ', num2str(roundedMetrics(2)), unitString];
+            end
+            
+        end
+        
+        %% calcTubeMetrics %%
+        % calculates the along tube distance from pylorus and point A to
+        % point D, in pixels
+        function [tubeMetrics] = calcTubeMetrics(file)
+            localMetricPoints = file.metricPoints;
+            localTubePoints = file.tubePoints;
+            
+            if isempty(localTubePoints)
+                tubeMetrics = [];
+            else
+                pylorusTubePointNum = getClosestTubePointNum(localMetricPoints.pylorusPoint, localTubePoints);
+                pointATubePointNum = getClosestTubePointNum(localMetricPoints.pointA, localTubePoints);
+                pointDTubePointNum = getClosestTubePointNum(localMetricPoints.pointD, localTubePoints);
+                
+                interTubePointDistance = norm(localTubePoints(1,:) - localTubePoints(2,:));
+                
+                tubeMetrics(1) = (pointDTubePointNum - pylorusTubePointNum) * interTubePointDistance;
+                tubeMetrics(2) = (pointDTubePointNum - pointATubePointNum) * interTubePointDistance;
+            end
         end
 
     end

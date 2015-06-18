@@ -33,7 +33,7 @@ rmpath('./Old Stuff [Delete]'); %ignore old files
 
 % Edit the above text to modify the response to help GJ_Tube
 
-% Last Modified by GUIDE v2.5 11-Jun-2015 10:18:39
+% Last Modified by GUIDE v2.5 15-Jun-2015 15:43:39
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -78,6 +78,7 @@ handles.displayTube = DisplayTube.empty;
 handles.metricLineTextLabels = TextLabel.empty;
 handles.metricLineDisplayLines = DisplayLine.empty;
 handles.metricPointHandles = impoint.empty;
+handles.metricPointTextLabels = TextLabel.empty;
 handles.refLineHandle = imline.empty;
 handles.midlineHandle = imline.empty;
 handles.quickMeasureLineHandle = imline.empty;
@@ -93,11 +94,13 @@ handles.deltaLineDisplayLines = DisplayLine.empty;
 axes(handles.imageAxes);
 imshow([],[]);
 cla(handles.imageAxes); % clear axes
-disableAllToggles(handles);
 
-%just turn on open functionality
-set(handles.open, 'Enable', 'on');
-set(handles.menuOpen, 'Enable', 'on');
+disableAllToggles(handles);
+updateToggleButtons(File.empty, handles);
+updateImageInfo(File.empty, handles);
+updatePatientSelector(handles);
+%TODO: updateUnitPanel();
+updateLongitudinalListbox(Patient.empty, handles);
 
 % Update handles structure
 guidata(hObject, handles);
@@ -123,7 +126,7 @@ function open_ClickedCallback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-[imageFilename, imagePath, ~] = uigetfile({'*.dcm;*.mat','Valid Files (*.dcm;*.mat)';'*.dcm','DICOM Files (*.dcm)';'*.mat','Patient Analysis Files (*.mat)'},'Select Image','/data/projects/GJtube/rawdata/');
+[imageFilename, imagePath, ~] = uigetfile({'*.dcm;*.mat','Valid Files (*.dcm;*.mat)';'*.dcm','DICOM Files (*.dcm)';'*.mat','Patient Analysis Files (*.mat)'},'Select Image','/data/projects/GJtube/testdata/');
 
 if imageFilename ~= 0 %user didn't click cancel!
     len = length(imageFilename);
@@ -185,6 +188,187 @@ if imageFilename ~= 0 %user didn't click cancel!
         guidata(hObject, handles);
     end
     
+end
+
+% --------------------------------------------------------------------
+function addPatient_ClickedCallback(hObject, eventdata, handles)
+% hObject    handle to addPatient (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+folderPath = uigetdir('/data/projects/GJtube/testdata/', 'Select Image');
+
+if folderPath ~= 0 %didn't click cancel
+    filesToOpen = getAllDicomFiles(folderPath);
+    
+    if ~isempty(filesToOpen) %make patient if there is at least one patient
+        firstFilePath = char(filesToOpen{1});
+        
+        dicomInfo = dicominfo(firstFilePath);
+        
+        [patientNum, ~] = findPatient(handles.patients, dicomInfo.PatientID); %see if the patient already exists
+        
+        openCancelled = false;
+        
+        if patientNum ~= 0 %ask user if they want to overwrite whatever patient with the same id was there before
+            openCancelled = overwritePatientDialog(); %confirm with user that they want to overwrite
+            
+            handles.currentPatientNum = patientNum;
+        else
+            handles.numPatients = handles.numPatients + 1;
+            handles.currentPatientNum = handles.numPatients;
+        end
+        
+        if ~openCancelled %is not cancelled, assign new patient
+            patient = Patient(dicomInfo.PatientID);
+            
+            %add all files
+            for i=1:length(filesToOpen) %guaranteed by FilesToOpen to be dicom files
+                filepath = char(filesToOpen(i));
+                dicomInfo = dicominfo(filepath);
+                
+                if dicomInfo.PatientID == patient.patientId %double check sure patient is the same
+                    dicomImage = dicomread(filepath);
+                    
+                    if (length(size(dicomImage)) == 2) %no multisplice support, sorry
+                        originalLimits = [min(min(dicomImage)), max(max(dicomImage))];
+                        
+                        file = File(dicomInfo, dicomImage, originalLimits);
+                        
+                        patient = patient.addFile(file);
+                    end
+                else
+                    waitfor(patientIdConflictDialog(patient.patientId, firstFilePath, dicomInfo.PatientID, filepath));
+                end
+            end
+            
+            patient.currentFileNum = 1; %start at the beginning (earliest image)
+            patient.changesPending = true;
+            
+            handles = updatePatient(patient, handles);
+            
+            currentFile = getCurrentFile(handles);
+            
+            %update view
+            updateImageInfo(currentFile, handles);
+            updatePatientSelector(handles);
+            updateToggleButtons(currentFile, handles);
+            
+            handles = drawAll(currentFile, handles, hObject);
+            
+            %push up changes
+            
+            guidata(hObject, handles);
+        end
+    end
+end
+
+% --------------------------------------------------------------------
+function addFile_ClickedCallback(hObject, eventdata, handles)
+% hObject    handle to addFile (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+[imageFilename, imagePath, ~] = uigetfile({'*.dcm','DICOM Files (*.dcm)'},'Select Image','/data/projects/GJtube/testdata/');
+
+if imageFilename ~= 0 %user didn't click cancel!
+    currentPatient = getCurrentPatient(handles);
+    
+    completeFilepath = strcat(imagePath, imageFilename);
+    dicomInfo = dicominfo(completeFilepath);
+    
+    if dicomInfo.PatientID == currentPatient.patientId %double check sure patient is the same
+        dicomImage = dicomread(completeFilepath);
+        
+        if (length(size(dicomImage)) == 2) %no multisplice support, sorry
+            originalLimits = [min(min(dicomImage)), max(max(dicomImage))];
+            
+            file = File(dicomInfo, dicomImage, originalLimits);
+            
+            currentPatient = currentPatient.addFile(file);
+        else
+            waitfor(msgbox('Multi-slice images are not supported!','Error','error'));
+        end
+    else
+        waitfor(patientIdConflictDialog(currentPatient.patientId, '', dicomInfo.PatientID, completeFilepath));
+    end
+    
+    currentPatient.changesPending = true;
+    
+    handles = updatePatient(currentPatient, handles);
+    
+    currentFile = getCurrentFile(handles);
+    
+    %update view
+    updateImageInfo(currentFile, handles);
+    updatePatientSelector(handles);
+    updateToggleButtons(currentFile, handles);
+    
+    handles = drawAll(currentFile, handles, hObject);
+    
+    %push up changes
+    
+    guidata(hObject, handles);    
+end
+
+% --------------------------------------------------------------------
+function exportAllPatients_ClickedCallback(hObject, eventdata, handles)
+% hObject    handle to menuExportPatient (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+exportPatients(handles.patients);
+
+
+% --------------------------------------------------------------------
+function exportPatient_ClickedCallback(hObject, eventdata, handles)
+% hObject    handle to exportPatient (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+exportPatients(getCurrentPatient(handles));
+
+
+% --------------------------------------------------------------------
+function closeAllPatients_ClickedCallback(hObject, eventdata, handles)
+% hObject    handle to closeAllPatients (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+for i=1:handles.numPatients
+    patient = handles.patients(i);
+    
+    closeCancelled = false;
+    saveFirst = false;
+    
+    if patient.changesPending;
+        [closeCancelled, saveFirst] = pendingChangesDialog(); %prompts user if they want to save unsaved changes
+    end
+    
+    if closeCancelled
+        break;
+    elseif saveFirst %user chose to save
+        patient.saveToDisk();
+    end  
+end
+
+if ~closeCancelled
+    handles.patients = Patient.empty;
+    handles.currentPatientNum = 0;
+    handles.numPatients = 0;
+    
+    currentFile = File.empty;
+    
+    %GUI updated
+    updatePatientSelector(handles);
+    updateImageInfo(currentFile, handles);
+    updateToggleButtons(currentFile, handles);
+    
+    %displayed imaged updated
+    handles = drawAll(currentFile, handles, hObject);
+    
+    %push up changes
+    guidata(hObject, handles);
 end
 
 function interpolConstrain_Callback(hObject, eventdata, handles)
@@ -610,8 +794,10 @@ handles = updateFile(currentFile, updateUndo, pendingChanges, handles);
 
 % update display
 toggled = true;
+labelsOn = true;
+
 handles = drawMetricLines(currentFile, handles, toggled);
-handles = drawMetricPointsWithCallback(currentFile, handles, hObject, toggled);
+handles = drawMetricPointsWithCallback(currentFile, handles, hObject, toggled, labelsOn);
 
 updateToggleButtons(getCurrentFile(handles), handles);
 
@@ -636,7 +822,7 @@ handles = updateFile(currentFile, updateUndo, pendingChanges, handles);
 
 % update display
 toggled = true;
-handles = drawQuickMeasureWithCallback(currentFile, handles, hObject, toggled);
+handles = drawQuickMelasureWithCallback(currentFile, handles, hObject, toggled);
 
 updateToggleButtons(getCurrentFile(handles), handles);
 
@@ -686,7 +872,7 @@ currentFile = getCurrentFile(handles);
 
 currentFile.waypointsOn = false; % need to clear the old ones off just in case
 
-handles.waypointHandles = deleteObjects(handles.waypointHandles);
+handles = deleteWaypoints(handles);
 
 [x,y] = getptsCustom(handles.imageAxes, 'c'); %rip off of MATLAB fn, just needed to change the markers
 
@@ -697,8 +883,6 @@ currentFile.waypointsOn = true;
 
 currentFile.tubePoints = [];
 currentFile.tubeOn = false;
-currentFile.metricPoints = [];
-currentFile.metricsOn = false;
 
 % finalize changes
 updateUndo = true;
@@ -712,9 +896,7 @@ draggable = false;
 handles = drawWaypoints(currentFile, handles, toggled, draggable);
 
 % delete tube points and metric lines
-handles.displayTube = deleteDisplayTubes(handles.displayTube);
-handles.metricLineTextLabels = deleteTextLabels(handles.metricLineTextLabels);
-handles.metricLineDisplayLines = deleteDisplayLines(handles.metricLineDisplayLines);
+handles = deleteTube(handles);
 
 updateToggleButtons(getCurrentFile(handles), handles);
 
@@ -745,9 +927,6 @@ waypoints = currentFile.getWaypoints();
 
 currentFile.tubeOn = true;
 
-currentFile.metricPoints = [];
-currentFile.metricsOn = false;
-
 currentFile = currentFile.setTubePoints(tubePoints);
 currentFile = currentFile.setWaypointPassbys(waypointPassbys);
 
@@ -757,12 +936,7 @@ pendingChanges = true;
 handles = updateFile(currentFile, updateUndo, pendingChanges, handles);
 
 % update display
-toggled = false;
-
-handles = drawTube(currentFile, handles, toggled);
-
-handles.metricLineTextLabels = deleteTextLabels(handles.metricLineTextLabels);
-handles.metricLineDisplayLines = deleteDisplayLines(handles.metricLineDisplayLines);
+handles = drawAll(currentFile, handles, hObject); %layering is usually screwed up by this point, so we fix it by redrawing everything
 
 updateToggleButtons(getCurrentFile(handles), handles);
 
@@ -777,7 +951,7 @@ function tuneTube_ClickedCallback(hObject, eventdata, handles)
 
 currentFile = getCurrentFile(handles);
 
-handles.waypointHandles = deleteObjects(handles.waypointHandles);
+handles = deleteWaypoints(handles);
 
 handles = drawTuningPoints(currentFile, handles);
 
@@ -873,41 +1047,34 @@ function calcMetrics_ClickedCallback(hObject, eventdata, handles)
 
 currentFile = getCurrentFile(handles);
 
-corAngle = findCorrectionAngle(currentFile.midlinePoints);
+%note that findMetricPoints does manipulate the display. It will delete any
+%existing metric points/lines that are drawn
+[metricPoints, handles] = findMetricsPoints(currentFile, handles, hObject );
 
-rotMatrix = [cosd(corAngle) -sind(corAngle); sind(corAngle) cosd(corAngle)];
-
-%rotate tube points into coord system where midline is vertical
-corTubePoints = applyRotationMatrix(currentFile.tubePoints, rotMatrix);
-
-[maxL, min, maxR] = findMetricsPoints(corTubePoints);
-
-invRotMatrix = [cosd(-corAngle) -sind(-corAngle); sind(-corAngle) cosd(-corAngle)];
-
-%rotate back into original coord system
-maxL = applyRotationMatrix(maxL, invRotMatrix);
-min = applyRotationMatrix(min, invRotMatrix);
-maxR = applyRotationMatrix(maxR, invRotMatrix);
-
-currentFile.metricPoints = [maxL; min; maxR];
-currentFile.metricsOn = true;
-currentFile = currentFile.chooseDisplayUnits();
-
-% finalize changes
-updateUndo = true;
-pendingChanges = true; 
-handles = updateFile(currentFile, updateUndo, pendingChanges, handles);
-
-% update display
-toggled = false;
-handles = drawMetricLines(currentFile, handles, toggled);
-handles = drawMetricPointsWithCallback(currentFile, handles, hObject, toggled);
-
-updateToggleButtons(getCurrentFile(handles), handles);
-updateUnitPanel(handles, 'on', currentFile.displayUnits, currentFile.getRefPoints());
-
-% push up the changes
-guidata(hObject, handles);
+if ~isempty(metricPoints) %if empty means user cancelled along the way
+    currentFile.metricPoints = metricPoints;
+    currentFile.metricsOn = true;
+    currentFile = currentFile.chooseDisplayUnits();
+    
+    %update file into handles
+    updateUndo = true;
+    pendingChanges = true;
+    
+    handles = updateFile(currentFile, updateUndo, pendingChanges, handles);
+    
+    %draw the new points
+    toggled = false;
+    labelsOn = true;
+    
+    handles = drawMetricLines(currentFile, handles, toggled);
+    handles = drawMetricPointsWithCallback(currentFile, handles, hObject, toggled, labelsOn);
+    
+    updateToggleButtons(getCurrentFile(handles), handles);
+    updateUnitPanel(handles, 'on', currentFile.displayUnits, currentFile.getRefPoints());
+    
+    % push up the changes
+    guidata(hObject, handles);
+end
 
 % --------------------------------------------------------------------
 function quickMeasure_ClickedCallback(hObject, eventdata, handles) %#ok<*INUSL>
@@ -1302,7 +1469,7 @@ guidata(hObject, handles);
 
 % --------------------------------------------------------------------
 function closePatient_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to closePatient (see GCBO)
+% hObject    handle to closeAllPatients (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
@@ -1655,7 +1822,18 @@ switch func
         updateToggleButtons(getCurrentFile(handles), handles);
         
         %displayed imaged updated
-        handles = drawAll(currentFile, handles, hObject);
+        % delete items that are now cleared
+        handles = deleteTube(handles);
+        handles = deleteMetricLines(handles);
+        handles = deleteMetricPoints(handles);
+        handles = deleteTuningPoints(handles);
+        handles = deleteWaypoints(handles);
+        
+        % plot new waypoints
+        toggled = false;
+        draggable = false;
+        
+        handles = drawWaypoints(currentFile, handles, toggled, draggable);
         
         %push up changes
         guidata(hObject, handles);
@@ -1705,3 +1883,45 @@ function menuToggleLongitudinal_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 toggleLongitudinal_ClickedCallback(hObject, eventdata, handles);
+
+
+% --------------------------------------------------------------------
+function menuAddFile_Callback(hObject, eventdata, handles)
+% hObject    handle to menuAddFile (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+addFile_ClickedCallback(hObject, eventdata, handles);
+
+% --------------------------------------------------------------------
+function menuAddPatient_Callback(hObject, eventdata, handles)
+% hObject    handle to menuAddPatient (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+addPatient_ClickedCallback(hObject, eventdata, handles);
+
+% --------------------------------------------------------------------
+function menuExportPatient_Callback(hObject, eventdata, handles)
+% hObject    handle to menuExportPatient (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+exportPatient_ClickedCallback(hObject, eventdata, handles);
+
+
+% --------------------------------------------------------------------
+function menuCloseAllPatients_Callback(hObject, eventdata, handles)
+% hObject    handle to menuCloseAllPatients (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+closeAllPatients_ClickedCallback(hObject, eventdata, handles)
+
+% --------------------------------------------------------------------
+function menuExportAllPatients_Callback(hObject, eventdata, handles)
+% hObject    handle to menuExportAllPatients (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+exportAllPatients_ClickedCallback(hObject, eventdata, handles);

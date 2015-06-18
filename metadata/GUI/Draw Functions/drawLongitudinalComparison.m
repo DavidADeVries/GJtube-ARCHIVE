@@ -8,13 +8,12 @@ deltaLineDisplayLines = handles.deltaLineDisplayLines;
 deltaLineTextLabels = handles.deltaLineTextLabels;
 
 currentFile = currentPatient.getCurrentFile();
-        
-baseRefPoints = currentFile.refPoints;
-longitudinalFileNumbers = currentPatient.getLongitudinalDisplayFileNumbers();
-numTubes = length(longitudinalFileNumbers);
 
 if currentPatient.longitudinalOn
-    if isempty(longitudinalDisplayTubes) || isempty(deltaLineDisplayLines) || isempty(deltaLineTextLabels) %create new 
+    baseRefPoints = currentFile.refPoints;
+    longitudinalFileNumbers = currentPatient.getLongitudinalDisplayFileNumbers();
+    numTubes = length(longitudinalFileNumbers);
+    if isempty(longitudinalDisplayTubes) || isempty(deltaLineDisplayLines) || isempty(deltaLineTextLabels) %create new
         %constants
         
         %for tube
@@ -45,7 +44,7 @@ if currentPatient.longitudinalOn
         greenShift = (endColour(2) - startColour(2))/numTubes;
         blueShift = (endColour(3) - startColour(3))/numTubes;
         
-        numDeltaLines = 3*(numTubes -1); %between each tube, 3 metric points each
+        numDeltaLines = 5*(numTubes -1); %between each tube, 5 metric points each
         
         deltaLines = Line.empty(numDeltaLines, 0);
         
@@ -60,7 +59,9 @@ if currentPatient.longitudinalOn
             
             transformTubePoints = [x,y];
             
-            [x,y] = transformPointsForward(transform, file.metricPoints(:,1), file.metricPoints(:,2));
+            metricPointsCoords = file.metricPoints.getPoints();
+            
+            [x,y] = transformPointsForward(transform, metricPointsCoords(:,1), metricPointsCoords(:,2));
             
             transformMetricPoints = [x,y];
             
@@ -82,15 +83,19 @@ if currentPatient.longitudinalOn
                                     style, lineWidth, borderWidth, borderColour, baseColour); %tube constants
                         
             if i ~= numTubes
-                deltaLines(((i-1)*3)+1).startPoint = transformMetricPoints(1,:);
-                deltaLines(((i-1)*3)+2).startPoint = transformMetricPoints(2,:);
-                deltaLines(((i-1)*3)+3).startPoint = transformMetricPoints(3,:);
+                deltaLines(((i-1)*5)+1).startPoint = transformMetricPoints(1,:);
+                deltaLines(((i-1)*5)+2).startPoint = transformMetricPoints(2,:);
+                deltaLines(((i-1)*5)+3).startPoint = transformMetricPoints(3,:);
+                deltaLines(((i-1)*5)+4).startPoint = transformMetricPoints(4,:);
+                deltaLines(((i-1)*5)+5).startPoint = transformMetricPoints(5,:);
             end
             
             if i ~= 1
-                deltaLines(((i-2)*3)+1).endPoint = transformMetricPoints(1,:);
-                deltaLines(((i-2)*3)+2).endPoint = transformMetricPoints(2,:);
-                deltaLines(((i-2)*3)+3).endPoint = transformMetricPoints(3,:);
+                deltaLines(((i-2)*5)+1).endPoint = transformMetricPoints(1,:);
+                deltaLines(((i-2)*5)+2).endPoint = transformMetricPoints(2,:);
+                deltaLines(((i-2)*5)+3).endPoint = transformMetricPoints(3,:);
+                deltaLines(((i-2)*5)+4).endPoint = transformMetricPoints(4,:);
+                deltaLines(((i-2)*5)+5).endPoint = transformMetricPoints(5,:);
             end
         end
         
