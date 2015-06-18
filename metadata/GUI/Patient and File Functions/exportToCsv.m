@@ -98,7 +98,7 @@ if isempty(err) %write file anew
         for j=1:length(files)
             file = files(j);
             
-            if ~isempty(file.metricPoints) && ~isempty(file.tubePoints) && ~isempty(file.refPoints) && ~isempty(file.midlinePoints) %these fields must be populated for analysis to be considered complete
+            if ~isempty(file.metricPoints) && ~isempty(file.refPoints) && ~isempty(file.midlinePoints) %these fields must be populated for analysis to be considered complete
                 if sequenceNumber == 1 %need to write out some patient info for first one
                     patientDOB = Date('19930211');%Date(file.dicomInfo.PatientBirthDate);
                     patientSex = file.dicomInfo.PatientSex;

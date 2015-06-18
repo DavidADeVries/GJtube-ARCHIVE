@@ -209,7 +209,7 @@ else %general toggles that must be turned on if any file is open, regardless of 
         set(handles.menuToggleMetrics, 'Checked', 'off');
     end
     
-    if isempty(file.midlinePoints) || isempty(file.tubePoints)
+    if isempty(file.midlinePoints)
         set(handles.calcMetrics, 'Enable', 'off');
         set(handles.menuCalcMetrics, 'Enable', 'off');
     else

@@ -12,8 +12,8 @@ else
     handles = drawImage(currentFile, handles);
     
     %handles = drawContrast(handles); %covered by drawImage
-    handles = drawWaypoints(currentFile, handles, toggled, draggable);
     handles = drawTube(currentFile, handles, toggled);
+    handles = drawWaypoints(currentFile, handles, toggled, draggable);
     handles = drawRefLineWithCallback(currentFile, handles, hObject, toggled);
     handles = drawMidlineWithCallback(currentFile, handles, hObject, toggled);
     handles = drawMetricLines(currentFile, handles, toggled);

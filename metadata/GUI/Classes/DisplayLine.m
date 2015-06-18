@@ -33,6 +33,12 @@ classdef DisplayLine
             delete(displayLine.lineHandle);
             delete(displayLine.borderHandle);
         end
+        
+        %% bringToTop %%
+        function [] = bringToTop(displayLine)
+            set(displayLine.borderHandle, 'Layer', 'top');
+            set(displayLine.lineHandle, 'Layer', 'top'); %want border behind line, so bring up line last
+        end
     end
     
 end

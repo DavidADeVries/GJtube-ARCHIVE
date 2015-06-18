@@ -144,8 +144,17 @@ classdef TextLabel
                 pos = get(handle, 'Position');
                 set(handle, 'Position', [pos(1) + position(1), pos(2) - position(2)]);
                 set(handle, 'Units', 'data');
-            end
+            end            
+        end
+        
+        %% bringToTop %%
+        function [] = bringToTop(textLabel)
+            set(textLabel.leftBorder, 'Layer', 'top');
+            set(textLabel.rightBorder, 'Layer', 'top');
+            set(textLabel.topBorder, 'Layer', 'top');
+            set(textLabel.bottomBorder, 'Layer', 'top');
             
+            set(textLabel.mainText, 'Layer', 'top'); %imperative that text is brought to the top last. Or else you won't see it!
         end
         
     end

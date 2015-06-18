@@ -398,8 +398,14 @@ classdef File
             b = metricLines(2).getLength(unitConversion);
             c = metricLines(3).getLength(unitConversion);
             d = metricLines(4).getLength(unitConversion);
-            e = tubeMetrics(1) * unitConversion(1);
-            f = tubeMetrics(2) * unitConversion(1);
+            
+            if isempty(tubeMetrics)
+                e = 0;
+                f = 0;
+            else
+                e = tubeMetrics(1) * unitConversion(1);
+                f = tubeMetrics(2) * unitConversion(1);
+            end
             
             measurements = struct('a',a,'b',b,'c',c,'d',d,'e',e,'f',f);
         end
@@ -409,11 +415,13 @@ classdef File
             [unitString, unitConversion] = file.getUnitConversion;
             
             tubeMetrics = file.calcTubeMetrics();
-            
+                     
             numTubeMetrics = length(tubeMetrics);            
             tubeMetricStrings = cell(numTubeMetrics);
             
-            if isempty(unitString) %empty strings
+            if numTubeMetrics == 0
+                tubeMetricStrings = {'',''}; %tubepoints must not be defined
+            elseif isempty(unitString) %empty strings
                 for i=1:numTubeMetrics
                     tubeMetricStrings{i} = '';
                 end
@@ -435,14 +443,18 @@ classdef File
             localMetricPoints = file.metricPoints;
             localTubePoints = file.tubePoints;
             
-            pylorusTubePointNum = getClosestTubePointNum(localMetricPoints.pylorusPoint, localTubePoints);
-            pointATubePointNum = getClosestTubePointNum(localMetricPoints.pointA, localTubePoints);
-            pointDTubePointNum = getClosestTubePointNum(localMetricPoints.pointD, localTubePoints);
-            
-            interTubePointDistance = norm(localTubePoints(1,:) - localTubePoints(2,:));
-            
-            tubeMetrics(1) = (pointDTubePointNum - pylorusTubePointNum) * interTubePointDistance;
-            tubeMetrics(2) = (pointDTubePointNum - pointATubePointNum) * interTubePointDistance;
+            if isempty(localTubePoints)
+                tubeMetrics = [];
+            else
+                pylorusTubePointNum = getClosestTubePointNum(localMetricPoints.pylorusPoint, localTubePoints);
+                pointATubePointNum = getClosestTubePointNum(localMetricPoints.pointA, localTubePoints);
+                pointDTubePointNum = getClosestTubePointNum(localMetricPoints.pointD, localTubePoints);
+                
+                interTubePointDistance = norm(localTubePoints(1,:) - localTubePoints(2,:));
+                
+                tubeMetrics(1) = (pointDTubePointNum - pylorusTubePointNum) * interTubePointDistance;
+                tubeMetrics(2) = (pointDTubePointNum - pointATubePointNum) * interTubePointDistance;
+            end
         end
 
     end
