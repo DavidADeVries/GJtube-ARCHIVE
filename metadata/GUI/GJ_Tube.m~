@@ -900,7 +900,7 @@ handles = deleteTube(handles);
 
 updateToggleButtons(getCurrentFile(handles), handles);
 
-% push up the changes
+% push up the l
 guidata(hObject, handles);
 
 % --------------------------------------------------------------------
@@ -1047,23 +1047,11 @@ function calcMetrics_ClickedCallback(hObject, eventdata, handles)
 
 currentFile = getCurrentFile(handles);
 
-midlinePoints = currentFile.midlinePoints;
-tubePoints = currentFile.tubePoints;
-
-corAngle = findCorrectionAngle(midlinePoints);
-
-rotMatrix = [cosd(corAngle) -sind(corAngle); sind(corAngle) cosd(corAngle)];
-
-%rotate tube points into coord system where midline is vertical
-corTubePoints = applyRotationMatrix(tubePoints, rotMatrix);
-invRotMatrix = [cosd(-corAngle) -sind(-corAngle); sind(-corAngle) cosd(-corAngle)];
-
-
-%note that findMetricPoints does manipulate the display. It will delete an
+%note that findMetricPoints does manipulate the display. It will delete any
 %existing metric points/lines that are drawn
-[metricPoints, handles] = findMetricsPoints(corTubePoints, handles, hObject, invRotMatrix );
+[metricPoints, handles] = findMetricsPoints(currentFile, handles, hObject );
 
-if ~isempty(metricPoints) %if empty means user cancelled along 
+if ~isempty(metricPoints) %if empty means user cancelled along the way
     currentFile.metricPoints = metricPoints;
     currentFile.metricsOn = true;
     currentFile = currentFile.chooseDisplayUnits();

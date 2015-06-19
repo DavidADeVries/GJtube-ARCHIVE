@@ -15,6 +15,7 @@ c_frac = x - c_down;
 
 val = (1-r_frac)*(1-c_frac)*image(r_down,c_down) + (1-r_frac)*(c_frac)*image(r_down,c_up) + (r_frac)*(1-c_frac)*image(r_up,c_down) + (r_frac)*(c_frac)*image(r_up,c_up);
 
+val = double(val); %there were some uint16 issues cropping up
 
 end
 

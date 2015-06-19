@@ -22,7 +22,7 @@ priorUsed = false;
 curvePoly = [0 1 0];
 numPoints = ((searchAngle * 2)/angularResolution)+1;
 x = (1:numPoints)';
-x = abs(x - ((searchAngle/angularResolution)+1));
+x = abs(x - (searchAngle+1));
 
 curveValues = polyval(curvePoly,x);
 
@@ -69,30 +69,26 @@ poly = polyfit(x,decisionValues,2);
 a = poly(1);
 b = poly(2);
 
-if a <= 0 %something went screwy! Plough on!
-    correctionAngle = 0;
-else
-    minX = -b/(2*a);
-    
-    disp(minX);
-    
-    correctionAngle = mod(minX*angularResolution - (searchAngle+1),  360);
-end
+minX = -b/(2*a);
 
-% disp(searchAngle);
-% disp(correctionAngle);
-% 
-% polyY = polyval(poly,x);
-% 
-% figure(1);
-% plot(x,polyY,'r--');
+disp(minX);
+
+correctionAngle = mod(minX*angularResolution - (searchAngle+1),  360);
+
+disp(searchAngle);
+disp(correctionAngle);
+    
+    polyY = polyval(poly,x);
+    
+    figure(1);
+    plot(x,polyY,'r--');
 
 
 % [~,I] = sort(decisionValues); %get lowest values
 % 
 % correctionAngle = mod(mean(I(1:5))*angularResolution - searchAngle,  360);
 
-
+    
 [x,y] = findXY(curPoint, vectorAngle + correctionAngle, radius);
 
 point = [x,y];
