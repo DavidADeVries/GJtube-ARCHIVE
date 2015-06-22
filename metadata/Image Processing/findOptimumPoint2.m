@@ -73,8 +73,8 @@ if a <= 0 %something went screwy! Plough on!
     correctionAngle = 0;
 else
     minX = -b/(2*a);
-    
-    disp(minX);
+%     
+%     disp(minX);
     
     correctionAngle = mod(minX*angularResolution - (searchAngle+1),  360);
 end

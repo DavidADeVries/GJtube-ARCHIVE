@@ -5,6 +5,9 @@ function [ tubePoints, waypointPassbys ] = pathFinder( image, waypoints, interpo
 numWaypoints = length(waypoints);
 dims = size(image);
 
+[~, ~, ~, ft, ~, ~, ~] = phasecong3(double(image));
+
+image = ft;
 
 tubePoints = [];
 waypointPassbys = [];

@@ -29,7 +29,15 @@ angRes = 1;
 lastPoint = [waypoints(1,1), waypoints(1,2)];
 curPoint = [waypoints(2,1), waypoints(2,2)];
 
-edges = edge(normalized,'Canny',[0.05,0.3]);%edge(image,'sobel',0.0015);
+%edges = edge(normalized,'Canny',[0.05,0.3]);%edge(image,'sobel',0.0015);
+
+[~, ~, ~, ft, ~, ~, ~] = phasecong3(double(image));
+
+imBw = im2bw(ft, graythresh(ft));
+
+cleaned = cleanupImage(imBw,7);
+
+edges = cleaned;
 
 curWaypointNum = 3; % 1 and 2 have just been used
 
@@ -62,10 +70,10 @@ maxIters = 500;
 
 tubeWidth = 0;
 
-horzScanRadius = 10;
+horzScanRadius = 5;
 vertScanRadius = 10;
 
-stepRadius = 5;
+stepRadius = 1;
 waypointRadius = 3;
 
 % figure(1);
@@ -93,7 +101,7 @@ while curWaypointNum <= numWaypoints && numTubePoints < maxIters
         %     disp('Next:');
         %     disp(nextPoint);
         %
-        %     plot(nextPoint(1),nextPoint(2),'Marker','o','MarkerEdgeColor','yellow');
+%             plot(nextPoint(1),nextPoint(2),'Marker','o','MarkerEdgeColor','yellow');
         
         angle = atand(rise/run); %rotate line form curPoint to nextPoint to horizontal
         
@@ -110,7 +118,7 @@ while curWaypointNum <= numWaypoints && numTubePoints < maxIters
         
         for i=1:2*vertScanRadius+1
             for j=1:2*horzScanRadius+1
-                interPoint = [nextPoint(1) + (j-horzScanRadius-1), nextPoint(2) + (i-vertScanRadius-1)];
+                interPoint = [nextPoint(1) + 2*(j-horzScanRadius-1), nextPoint(2) + 2*(i-vertScanRadius-1)];
                 
                 %             disp('POINT:')
                 %             disp(interPoint);
@@ -120,7 +128,7 @@ while curWaypointNum <= numWaypoints && numTubePoints < maxIters
                 
                 %             disp(interPoint);
                 
-                %             plot(interPoint(1),interPoint(2),'Marker','x','MarkerEdgeColor','white');
+%                 plot(interPoint(1),interPoint(2),'Marker','x','MarkerEdgeColor','white');
                 
                 scanValues(i,j) = interpolate(edges, interPoint);
             end
@@ -128,32 +136,49 @@ while curWaypointNum <= numWaypoints && numTubePoints < maxIters
         
         rowValues = sum(scanValues,2); %sum across rows
         
-        topMax = 0;
-        topIndex = 0;
+%         topMax = 0;
+%         topIndex = 0;
+%         
+%         bottomMax = 0;
+%         bottomIndex = 0;
+%         
+%         middle = vertScanRadius + 1;
+%         
+%         for i=1:vertScanRadius
+%             if rowValues(middle+i) > topMax
+%                 topMax = rowValues(middle+i);
+%                 topIndex = +i;
+%             end
+%             
+%             if rowValues(middle-i) > bottomMax
+%                 bottomMax = rowValues(middle-i);
+%                 bottomIndex = -i;
+%             end
+%         end
+%         
+%         middleIndex = (topIndex + bottomIndex)/2;
+
+        minVal = Inf;
+        minIndices = [];
+        minIndex = 1;
         
-        bottomMax = 0;
-        bottomIndex = 0;
-        
-        middle = vertScanRadius + 1;
-        
-        for i=1:vertScanRadius
-            if rowValues(middle+i) > topMax
-                topMax = rowValues(middle+i);
-                topIndex = +i;
-            end
-            
-            if rowValues(middle-i) > bottomMax
-                bottomMax = rowValues(middle-i);
-                bottomIndex = -i;
+        for i=1:vertScanRadius*2+1
+            if rowValues(i) < minVal
+                minVal = rowValues(i);
+                minIndices = [i];
+                minIndex = 2;
+            elseif rowValues(i) == minVal
+                minIndices(minIndex) = i;
+                minIndex = minIndex + 1;
             end
         end
         
-        middleIndex = (topIndex + bottomIndex)/2;
+        middleIndex = mean(minIndices) - (vertScanRadius + 1);
         
         %     disp('Index');
         %     disp(middleIndex);
         
-        nextPoint = [nextPoint(1), nextPoint(2) + middleIndex];
+        nextPoint = [nextPoint(1), nextPoint(2) + 2*middleIndex];
         [x,y] = transformPointsForward(transform, nextPoint(1), nextPoint(2));
         nextPoint = [x,y];
     end

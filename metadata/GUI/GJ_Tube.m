@@ -6,6 +6,7 @@ addpath('../Image Processing');
 addpath('../CircStat2012a');
 addpath('../arrow');
 addpath('/data/projects/GJtube/metadata/MATLAB Image Functions');
+addpath('/data/projects/GJtube/metadata/Peter Kovesi Computer Vision Libraries/Feature Detection');
 addpath(genpath('.')); %add all subfolders in the current directory
 
 rmpath('./Old Stuff [Delete]'); %ignore old files
